@@ -102,6 +102,8 @@ def operation_search_condition(usertoken, companyid, search_command=None, search
 
                     one_recode = dict()
                     one_recode["orderId"] = str(com.command_id)
+                    if one_recode["orderId"] == "1":
+                        one_recode["type"] = "10"
                     one_recode["name"] = com.command_displayname
                     commands.append(one_recode)
                 one_group_result["orders"] = commands

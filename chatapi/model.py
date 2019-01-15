@@ -70,7 +70,7 @@ class Company(db.Model):
     companyexpiredate = db.Column(db.TIMESTAMP(True),nullable=True,comment='过期时间')
     createtime = db.Column(db.TIMESTAMP(True), nullable=False,comment='创建时间')
     updatetime = db.Column(db.TIMESTAMP(True), nullable=False, comment='更新时间')
-
+    disable = db.Column(db.Boolean, default=0, comment='禁用开关')
 
 class Permission(db.Model):
     # 定义表名

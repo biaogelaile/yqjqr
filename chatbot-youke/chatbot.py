@@ -72,12 +72,32 @@ def botsendmsgtype4(host):
             "actions": [
                 {
                 "title": "内存",
-                "ratio": '32GB',
+                "ratio": '32',
                 }
             ]}}}
 
     socket.emit('chatbot', sendmsgtype4)
     print('ooooooh yes')
+
+
+def botsendmsgtype6(host):
+    sendmsgtype6 = {
+        "data": {
+            "type": 4,
+            "token": token,
+            'companyid': companyid,
+            "rootbean": {
+            "msg": "当前" + host + "(ip:" + host + "）磁盘运行情况：",
+            "actions": [
+                {
+                "title": "磁盘",
+                "ratio": '16',
+                }
+            ]}}}
+
+    socket.emit('chatbot', sendmsgtype6)
+    print('ooooooh yes')
+
 
 def botsendmsgtype8(host):
     sendmsgtype8 = {
@@ -133,6 +153,11 @@ def chatbot_response(*args):
             host = botmsgdict['data']['msg']
             print(host)
             botsendmsgtype4(host)
+    elif botmsgdict['data']['userid'] != 'youkechatbot' and botmsgdict['data']['type'] == 6:
+            print(botmsgdict['data'])
+            host = botmsgdict['data']['msg']
+            print(host)
+            botsendmsgtype6(host)
     elif botmsgdict['data']['userid'] != 'youkechatbot' and botmsgdict['data']['type'] == 8:
             print(botmsgdict['data'])
             host = botmsgdict['data']['msg']

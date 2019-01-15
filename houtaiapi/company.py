@@ -4,7 +4,7 @@ import time
 import requests, json
 from urllib.parse import unquote
 import math
-
+import re
 url = apiserverurl + "/api/v1/hosts?token=xxx-11111"
 
 
@@ -616,9 +616,21 @@ def companypatch(userid, usertoken,oldcompanyname, newcompanyname,companyemail, 
         else:
             companyid_query.companyname = newcompanyname
             companyid_query.companyemail = companyemail
+            if len(companyemail) == 0:
+                return {'status': 4, 'msg': '邮箱输入为空，请重新输入！！！'}
+            elif re.match(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$', companyemail) is None:
+                return {'status': 3, 'msg': '您输入的邮箱地址无效，请重新输入！！！'}
             companyid_query.companymark = mark
             #companyid_query.companyrole = 2
             companyid_query.disable = disable
+            #这个地方注意一下
+            opusers_query = Opuser.query.filter_by(opcompanyid=companyid_query.companyid).all()
+            for opuser in opusers_query:
+               user_query = User.query.filter_by(userid=opuser.opuserid)
+               if disable == 0:
+                   user_query.role = '0'
+               elif disable == 1:
+                   user_query.role = '1'
 
             db.session.commit()
             db.session.close()

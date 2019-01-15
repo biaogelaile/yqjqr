@@ -806,23 +806,28 @@ def search_operation_search_condition():
                         "orders":[
                                 {
                         "name":"查看主机CPU",
-                        "orderId":"10"
+                        "orderId":"10",
+                        "type":"3"
                     },
                     {
                         "name":"查看主机内存",
-                        "orderId":"11"
+                        "orderId":"11",
+                        "type":"4"
                     },
                     {
                         "name":"查看网络流量",
-                        "orderId":"12"
+                        "orderId":"12",
+                        "type":"8"
                     },
                     {
                         "name":"查看磁盘空间",
-                        "orderId":"13"
+                        "orderId":"13",
+                        "type":"6"
                     },
                     {
                         "name":"查看磁盘读写",
-                        "orderId":"4"
+                        "orderId":"4",
+                        "type":"12"
                     },
                     {
                         "name":"查看端口连接数",
@@ -834,7 +839,8 @@ def search_operation_search_condition():
                         "orders":[
                                 {
                         "name":"服务器重启",
-                        "orderId":"20"
+                        "orderId":"20",
+                        "type":"10"
                     },
                     {
                         "name":"重启tomcat应用",

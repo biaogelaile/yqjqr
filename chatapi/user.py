@@ -841,7 +841,7 @@ def user_login(mobile, password):
         return {'status':3, 'Oooops': '数据库连接似乎出了问题'}
 """
 
-
+"""
 def user_login(mobile, password):
     try:
         user_query = User.query.filter_by(mobile=mobile).first()
@@ -976,7 +976,218 @@ def user_login(mobile, password):
         # 3 为数据库连接错误
     except sqlalchemy.exc.OperationalError:
         return {'status': 3, 'Oooops': '数据库连接似乎出了问题'}
+"""
 
+def user_login(mobile, password):
+    try:
+        user_query = User.query.filter_by(mobile=mobile).first()
+
+        if user_query is None:
+            db.session.close()
+            return {'status': 1, 'msg': '用户名或密码错误'}
+        user_mark = user_query.mark
+        if user_mark == "userdisabled":
+            return {'status': 10, 'msg': '用户已被禁用'}
+
+        user_password = user_query.password
+
+        if user_password != password:
+            return {'status': 1, 'msg': '用户名或密码错误'}
+
+        user_id = user_query.userid
+        user_role = user_query.role
+        user_name = user_query.username
+        user_profile = user_query.profile
+        # 当用户申请加入公司但是处于审核状态
+        if user_query.role == '2':
+            user_youke_company_query = Opuser.query.filter_by(opuserid=user_id).first()
+            youkecompanyid = user_youke_company_query.opcompanyid
+            youkecompanyinfo = Company.query.filter_by(companyid=youkecompanyid).first()
+            youke_companyexpiredate = youkecompanyinfo.companyexpiredate
+            if youke_companyexpiredate:
+                request_create_time_chuo = int(time.mktime(youke_companyexpiredate.timetuple()))
+            else:
+                request_create_time_chuo = None
+
+            youke_companyname = youkecompanyinfo.companyname
+            youke_companrole = youkecompanyinfo.companyrole
+            db.session.close()
+            return {
+                "companyexpiredate": request_create_time_chuo,
+                "companyid": youkecompanyid,
+                "companyname": youke_companyname,
+                "companyrole": youke_companrole,
+                "email": None,
+                "imageUrl": user_profile,
+                "mobile": mobile,
+                "msg": "登录成功",
+                "role": user_role,
+                "status": 0,
+                "token": user_id + "-11111",
+                "userid": user_id,
+                "username": user_name,
+            }
+
+        opuser_company_default_querys = Opuser.query.filter_by(opmobile=mobile).first()
+        # 当用户未加入公司
+        if opuser_company_default_querys is None:
+            logintime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            user_query.logintime = logintime
+            db.session.commit()
+            db.session.close()
+            return {
+                "companyexpiredate": None,
+                "companyid": None,
+                "companyname": None,
+                "companyrole": None,
+                "email": None,
+                "imageUrl": user_profile,
+                "mobile": mobile,
+                "msg": "登录成功",
+                "role": user_role,
+                "status": 0,
+                "token": user_id + "-11111",
+                "userid": user_id,
+                "username": user_name,
+            }
+
+        companycount = 0
+        opuserlist = []
+        opusers_query = Opuser.query.filter_by(opmobile=mobile).all()
+        for opuser in opusers_query:
+            opcompanyid = opuser.opcompanyid
+            opcompanyinfo_query = Company.query.filter_by(companyid=opcompanyid,disable=0).first()
+            if opcompanyinfo_query:
+                companycount += 1
+                opuserlist.append(opuser)
+        if companycount >= 2:
+            opcompany_list = []
+            checkopcompany = []
+            for opuser_company_query in opuserlist:
+                if opuser_company_query.oprole != '2':
+                    opcompany_dict = {}
+                    opcompanyid = opuser_company_query.opcompanyid
+                    opuserid = opuser_company_query.opuserid
+                    opusername = opuser_company_query.opusername
+                    opmobile = opuser_company_query.opmobile
+                    oprole = opuser_company_query.oprole
+                    opcompanyinfo_query = Company.query.filter_by(companyid=opcompanyid).first()
+                    opcompanyname = opcompanyinfo_query.companyname
+                    opcompanyrole = opcompanyinfo_query.companyrole
+                    companyexpiredate = opcompanyinfo_query.companyexpiredate
+                    if companyexpiredate:
+                        request_create_time_chuo = int(time.mktime(companyexpiredate.timetuple()))
+                    else:
+                        request_create_time_chuo = None
+                    opcompany_dict['companyid'] = opcompanyid
+                    opcompany_dict['userid'] = opuserid
+                    opcompany_dict['username'] = opusername
+                    opcompany_dict['companyname'] = opcompanyname
+                    opcompany_dict['companyrole'] = opcompanyrole
+                    opcompany_dict['companyexpiredate'] = request_create_time_chuo
+                    opcompany_dict['mobile'] = opmobile
+                    opcompany_dict['oprole'] = oprole
+                    opcompany_list.append(opcompany_dict)
+                else:
+                    checkopcompany.append('check')
+            if len(opuserlist) == len(checkopcompany):
+                db.session.close()
+                return {
+                    "companyexpiredate": None,
+                    "companyid": None,
+                    "companyname": None,
+                    "companyrole": None,
+                    "email": None,
+                    "imageUrl": user_profile,
+                    "mobile": mobile,
+                    "msg": "登录成功",
+                    "role": user_role,
+                    "status": 0,
+                    "token": user_id + "-11111",
+                    "userid": user_id,
+                    "username": user_name,
+                }
+            else:
+                db.session.close()
+                return {'status': 0, 'msg': '登录成功', 'choice': {'status': 'false', 'companyinfo': opcompany_list},
+                        'token': user_id + '-11111'}
+        elif companycount == 1:
+            opuser_company_default_querys = opuserlist[0]
+            opusercompanyid_default = opuser_company_default_querys.opcompanyid
+            opusersdefault = Opuser.query.filter_by(opmobile=mobile).all()
+            for opuserdefault in opusersdefault:
+                if opuserdefault.opcompanyid == opusercompanyid_default:
+                    opuserdefault.default = "true"
+                    db.session.commit()
+                else:
+                    opuserdefault.default = "false"
+                    db.session.commit()
+            opuseremail_default = opuser_company_default_querys.opemail
+            opusercompanyinfo_default = Company.query.filter_by(companyid=opusercompanyid_default).first()
+            opusercompanyname_default = opusercompanyinfo_default.companyname
+            opusercompanyrole_default = opusercompanyinfo_default.companyrole
+            opusercompanyexpire_default = opusercompanyinfo_default.companyexpiredate
+
+            if opusercompanyexpire_default:
+                request_create_time_chuo = int(time.mktime(opusercompanyexpire_default.timetuple()))
+            else:
+                request_create_time_chuo = None
+            myloginopmobile = opuser_company_default_querys.opmobile
+            myloginoprole = opuser_company_default_querys.oprole
+            myloginopusername = opuser_company_default_querys.opusername
+            db.session.close()
+            return {
+                "companyexpiredate": request_create_time_chuo,
+                "companyid": opusercompanyid_default,
+                "companyname": opusercompanyname_default,
+                "companyrole": opusercompanyrole_default,
+                "email": opuseremail_default,
+                "imageUrl": user_profile,
+                "opmobile": myloginopmobile,
+                "mobile": mobile,
+                "msg": "登录成功",
+                "role": user_role,
+                "oprole": myloginoprole,
+                "status": 0,
+                "token": user_id + "-11111",
+                "userid": user_id,
+                "username": user_name,
+                "opusername": myloginopusername,
+
+            }
+        else:
+
+
+            # 当用户只加入一家公司且被禁用
+
+            logintime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            user_query.logintime = logintime
+            oneopuser = Opuser.query.filter_by(opuserid=user_query.userid).first()
+            user_query.role = "1"
+            db.session.commit()
+            db.session.close()
+            return {
+                "companyexpiredate": None,
+                "companyid": None,
+                "companyname": None,
+                "companyrole": None,
+                "email": None,
+                "imageUrl": user_profile,
+                "mobile": mobile,
+                "msg": "登录成功",
+                "role": user_role,
+                "status": 0,
+                "token": user_id + "-11111",
+                "userid": user_id,
+                "username": user_name,
+            }
+
+        # 0 为 登录成功
+        # 1 为用户名或密码错误
+        # 2 为用户名或密码错误
+        # 3 为数据库连接错误
+    except sqlalchemy.exc.OperationalError:
+        return {'status': 3, 'Oooops': '数据库连接似乎出了问题'}
 
 def company_query(companyname, token):
     try:
@@ -1022,6 +1233,10 @@ def company_query(companyname, token):
                     if search_company_status.find(companyname) != -1:
                         print('hhhhhhhhhhhhhhhhh')
                         mohu_query_list.append(search_company)
+                   # else:
+                       # return {'status':'2','msg':'公司未搜索到'}
+                if len(mohu_query_list)==0:
+                    return {'status':'2','msg':'公司未搜索到'}
                 db.session.close()
                 return {'status': 0, 'companys': mohu_query_list, 'msg': "查询成功"}
 
@@ -1041,10 +1256,14 @@ def company_insert(email, username, companyname, userid, token):
         if token != '11111':
             return {'status': 1, 'msg': 'token不可用'}
 
-        if len(companyname) > 32:
-            return {'status': 6, 'msg': '公司名称不符合长度要求，公司名称应在36字以内'}
+        if len(companyname) > 50:
+            return {'status': 6, 'msg': '公司名称不符合长度要求，公司名称应在50字以内'}
+        elif re.search(r'[^a-zA-Z0-9\u4E00-\u9FA5\t\n\x0B\f\r]',companyname):
+            return {'status':'7','msg':'公司名称中不允许包含特殊字符，请重新输入'}
         elif len(email)== 0:
             return {'status': 2, 'msg': '请先填写邮箱'}
+        elif re.match(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$',email) is None:
+            return {'status':'7','msg':'请输入有效邮箱地址'}
         elif len(username) == 0:
             return {'status': 3, 'msg': '请先填写用户名'}
         elif len(companyname) ==0:
@@ -1643,6 +1862,7 @@ def deleteopuser(adminuserid, usertoken, opmobile, admincompanyid):
 #        return {'status': 4, 'msg': 'something warong'}
 
 
+"""
 def updateopuser(adminuserid, usertoken, opusername, opmobile, opuserid, opcompanyid):
     try:
         if usertoken != '11111':
@@ -1662,6 +1882,58 @@ def updateopuser(adminuserid, usertoken, opusername, opmobile, opuserid, opcompa
             return {'status': 4, 'msg': '没有权限'}
         else:
             opuser_query = Opuser.query.filter_by(opmobile=opmobile, opcompanyid=opcompanyid).first()
+            if opuser_query:
+                opuser_query.opusername = opusername
+                opuser_query.opmobile = opmobile
+            else:
+                opuser_query = Opuser.query.filter_by(opusername=opusername, opcompanyid=opcompanyid).first()
+                opuser_query.opusername = opusername
+                opuser_query.opmobile = opmobile
+
+            opusercheck_query = Opuser.query.filter_by(opmobile=opmobile).first()
+            if opusercheck_query:
+                pass
+            else:
+                change_userrole = User.query.filter_by(mobile=opmobile).first()
+                if change_userrole:
+                    change_userrole.role = '1'
+                    db.session.commit()
+
+
+            db.session.commit()
+            db.session.close()
+            return {'status': 0, 'msg': '修改成功'}
+    except sqlalchemy.exc.OperationalError:
+        db.session.close()
+        return {'Oooops': 'There is a problem with the database'}
+"""
+
+
+def updateopuser(adminuserid, usertoken, opusername, opmobile, opuserid, opcompanyid):
+    try:
+        if usertoken != '11111':
+            return {'status': 1, 'msg': 'Token无效'}
+
+        if len(opusername) > 12:
+            return {'status': 5, 'msg':'用户名长度不符合要求，用户名应在12字以内'}
+
+
+        if opmobile == 'null':
+            return {'status': 2, 'msg': '手机号码不能为空'}
+        elif phonecheck(opmobile) == 'failure':
+            return {'status': 3, 'msg': '请输入正确的手机号码'}
+        admin_opuser_query = Opuser.query.filter_by(opuserid=adminuserid, opcompanyid=opcompanyid, oprole='4').first()
+        if admin_opuser_query is None:
+            db.session.close()
+            return {'status': 4, 'msg': '没有权限'}
+        else:
+            opusers_query = Opuser.query.filter_by(opcompanyid=opcompanyid).all()
+            opuserself = Opuser.query.filter_by(opcompanyid=opcompanyid,opuserid=opuserid).first()
+            if opusers_query:
+                for tempopuser in opusers_query:
+                    if tempopuser.opmobile == opmobile and tempopuser.opuserid != opuserself.opuserid:
+                        return {'status':'6','msg':'手机号码不能与其他用户重复'}
+            opuser_query = Opuser.query.filter_by(opcompanyid=opcompanyid,opmobile=opmobile).first()
             if opuser_query:
                 opuser_query.opusername = opusername
                 opuser_query.opmobile = opmobile

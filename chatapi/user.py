@@ -142,8 +142,12 @@ def user_info(userid, token, companyid):
         user_name = user_query.username
         if user_role != '1' and user_role != '2':
             company_query = Company.query.filter_by(companyid=companyid).first()
-            user_companyname = company_query.companyname
-            user_companyexpiredate = company_query.companyexpiredate
+            if company_query:
+                user_companyname = company_query.companyname
+                user_companyexpiredate = company_query.companyexpiredate
+            else:
+                user_companyname=None
+                user_companyexpiredate = None
             if company_query.companyrole:
                 user_companyrole = company_query.companyrole
             else:
@@ -1258,8 +1262,8 @@ def company_insert(email, username, companyname, userid, token):
 
         if len(companyname) > 50:
             return {'status': 6, 'msg': '公司名称不符合长度要求，公司名称应在50字以内'}
-        elif re.search(r'[^a-zA-Z0-9\u4E00-\u9FA5\t\n\x0B\f\r]',companyname):
-            return {'status':'7','msg':'公司名称中不允许包含特殊字符，请重新输入'}
+        #elif re.search(r'^([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)$',companyname):
+           #return {'status':'7','msg':'公司名称中不允许包含特殊字符，请重新输入'}
         elif len(email)== 0:
             return {'status': 2, 'msg': '请先填写邮箱'}
         elif re.match(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$',email) is None:

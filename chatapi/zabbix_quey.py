@@ -188,7 +188,9 @@ def query_hosts(userid, usertoken, companyid):
                     "id": 1,
             })
         hosts = requests.post(zabbixurl + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+        print(hosts)
         hosts_list =  hosts.json()['result']
+        print(hosts_list)
         checkhosts_list = []
         for checkhost_dict in hosts_list:
 
@@ -212,6 +214,7 @@ def query_hosts(userid, usertoken, companyid):
                          'inamount':inhostsnumber, 'totalhosts': checkhosts_list,
                          'inhosts':inhostinfo_list,
                          }
+        print(hosts_queryrs)
         db.session.close()
         return hosts_queryrs
     #        host_list = hosts.json()['result']
@@ -538,6 +541,8 @@ def zabbix_get_complay_hosts(usertoken, companyid):
     #获取所属公司所有的监控信息
     try:
         zabbixinfo_querys = Monitor.query.filter_by(companyid=user_companyid).all()
+        
+        print(len(zabbixinfo_querys))
         #获取所属公司的zabbix服务器信息
         zabbixitems_list = []
         for zabbixinfo_query in zabbixinfo_querys:
@@ -552,7 +557,7 @@ def zabbix_get_complay_hosts(usertoken, companyid):
             zabbixitem_host_dict['host'] = zabbixhostip
             zabbixitem_host_dict['name'] = zabbixhostname
             zabbixitems_list.append(zabbixitem_host_dict)
-
+        print("zabbixitems_list:",zabbixitems_list)
         #查询zabbix监控
         result_temp = []
         for zabbixitems in zabbixitems_list:

@@ -88,7 +88,7 @@ def backstagenewusers(adminuserid, token, page):
     users_query_page = User.query.filter(User.mobile.like('1%'), User.createtime >= todays_datetime).order_by(User.createtime.desc()).paginate(page, per_page=20, error_out=False)
     users_query = users_query_page.items
     #users_total =  len(users_query) / 15
-    users_query_total = User.query.filter(User.mobile.like('1%'), User.createtime >= todays_datetime).order_by(User.createtime.desc())
+    users_query_total = User.query.filter(User.mobile.like('1%'), User.createtime >= todays_datetime).order_by(User.createtime.desc()).all()
     users_total =  len(users_query_total) / 15
     page_total = math.ceil(users_total)
     for user_query in users_query:

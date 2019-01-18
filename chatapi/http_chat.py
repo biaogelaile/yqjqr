@@ -575,10 +575,11 @@ def getcomplanyallhostvalue():
         company_role = "2"
     if role == "0" and companyid != "" and company_role != "1":
         #合法用户
-        with ThreadPoolExecutor(2) as executor:
-            all_host_values = executor.submit(zabbix_quey.zabbix_get_complay_hosts, usertoken, companyid)
-            result = all_host_values.result()
+        #with ThreadPoolExecutor(2) as executor:
+           #all_host_values = executor.submit(zabbix_quey.zabbix_get_complay_hosts, usertoken, companyid)
+           # result = all_host_values.result()
             #result = zabbix_quey.zabbix_get_complay_hosts(usertoken, companyid)
+        result = zabbix_quey.zabbix_get_complay_hosts(usertoken,companyid)
     else:
         #游客/待审核用户
         result = {"msg": "successful", "result":
@@ -771,6 +772,8 @@ def search_operation_log_condition(token, companyid, role, oprole):
 }
     return result
 
+
+"""
 #提供过滤日志的条件
 @app.route('/api/v1/operation/search_condition', methods=['POST'])
 def search_operation_search_condition():
@@ -899,7 +902,112 @@ def search_operation_search_condition():
             }
 
     return demjson.encode(result)
+"""
 
+#提供过滤日志的条件
+@app.route('/api/v1/operation/search_condition', methods=['POST'])
+def search_operation_search_condition():
+    try:
+        request_data = request.get_json()
+        usertoken = request_data['usertoken']
+        companyid = request_data['companyid']
+        role = request_data['role']
+        oprole = request_data['oprole']
+        search_command = request_data['search_command']
+        search_user = request_data['search_user']
+    except:
+        result = {
+            "result": "parameter error",
+            "status": -1
+        }
+        return jsonify(result)
+    company_status = Company.query.filter_by(companyid=companyid).first()
+    if company_status:
+        company_role = company_status.companyrole
+    else:
+        # 游客，设置和试用中公司项目的角色
+        company_role = "2"
+    if role == "0" and companyid != "" and oprole != "" and company_role == "2":
+        result = search_oper_log.operation_search_condition(usertoken=usertoken, companyid=companyid,
+                                                            search_user=search_user, search_command=search_command)
+    else:
+        if search_command == "0":
+            result = {
+                "result": [
+                    {
+                        "groupName": "监控项目",
+                        "orders":[
+                                {
+                        "name":"查看主机CPU",
+                        "orderId":"10",
+                        "type":"3"
+                    },
+                    {
+                        "name":"查看主机内存",
+                        "orderId":"11",
+                        "type":"4"
+                    },
+                    {
+                        "name":"查看网络流量",
+                        "orderId":"12",
+                        "type":'8'
+
+                    },
+                    {
+                        "name":"查看磁盘空间",
+                        "orderId":"13",
+                        "type":'6'
+                    },
+                    {
+                        "name":"查看磁盘读写",
+                        "orderId":"4",
+                        "type":"12"
+
+                    }
+                    ]},
+                    {
+                        "groupName": "重启项目",
+                        "orders":[
+                                {
+                        "name":"服务器重启",
+                        "orderId":"20",
+                        "type":"10"
+                    }]
+                    },
+                    {
+                        "groupName": "数据库查询",
+                        "orders":[
+                          
+                    ]
+                    },
+		    {
+                        "groupName": "命令操作日志",
+                        "orders":[
+                                {
+                        "name":"查看命令操作日志",
+                        "orderId":"5"
+                    }]
+
+					}],
+                    "msg": "successful",
+                    "status": 0
+                }
+        else:
+            result = {
+                "result": [{"operationId":"u2LPwkUyAGfOUIovJrCC1",
+                        "operationImage":"http://139.196.107.14:6001/upload/2018-11-12/qMWML0jLCnhs2o1Nv6a5ajpr-defaultUser@3x.png",
+                        "operationName":"tom"},
+                       {"operationId":"u2LPwkUyAGfOUIovJrCC1",
+                        "operationImage":"http://139.196.107.14:6001/upload/2018-11-12/qMWML0jLCnhs2o1Nv6a5ajpr-defaultUser@3x.png",
+                        "operationName":"jerry"},
+                       {"operationId":"u2LPwkUyAGfOUIovJrCC1",
+                        "operationImage":"http://139.196.107.14:6001/upload/2018-11-12/qMWML0jLCnhs2o1Nv6a5ajpr-defaultUser@3x.png",
+                        "operationName":"\u5f20\u4e09"}],
+                "msg": "successful",
+                "status": 0
+            }
+
+    return demjson.encode(result)
 
 #带条件搜索机器人操作日志
 @app.route('/api/v1/operation/search_operation_log_condition', methods=['POST'])

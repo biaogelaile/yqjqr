@@ -236,6 +236,73 @@ def backstagecm(userid, token, urlsearchcompanyname, page):
     db.session.close()
     return {"status": 0, "msg":"查询成功", 'pagetotal':page_total,"companyinfo": rs_query_list}
 
+
+#这个接口是我新添的，没有暴露出来
+def backstagecm1(userid, token, searchcompanyid, page):
+    if token != '11111':
+        return {'status':1, 'msg':'token不可用'}
+
+    #公司总数量
+    rs_query_list = []
+    #companys_query = Company.query.all()
+    page = int(page)
+
+    companys_query = Company.query.filter(companyid=searchcompanyid).order_by(Company.createtime.desc()).paginate(page, per_page=15, error_out=False)
+
+    companys_page_query = companys_query.items
+
+
+    companys_total =  len(companys_page_query) / 15
+    page_total = math.ceil(companys_total)
+
+    for company_query in companys_page_query:
+        companyid = company_query.companyid
+        zabbixhostinfo = zabbix_hosts_query(companyid)
+        if zabbixhostinfo['status'] != 2:
+            totalhost = len(zabbixhostinfo['totalhosts'])
+        else:
+            totalhost = None
+        companyname = company_query.companyname
+        disable = company_query.disable
+        companyexpire = company_query.companyexpiredate
+        companyrole = company_query.companyrole
+        user_query = Opuser.query.filter_by(opcompanyid=companyid).all()
+        totalcompanyusers = len(user_query)
+        adminuser_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
+        zabbix_query = Zabbix.query.filter_by(companyid=companyid).first()
+        zabbix_exist = "false"
+        if zabbix_query:
+            zabbixid = zabbix_query.zabbixid
+            zabbixserver = zabbix_query.zabbixserver
+            zabbixuser = zabbix_query.zabbixuser
+            zabbixpassword = zabbix_query.zabbixpassword
+            zabbix_exist = "true"
+        else:
+            zabbixid = None
+            zabbixserver = None
+            zabbixuser = None
+            zabbixpassword = None
+            zabbix_exist = "false"
+        adminusername = adminuser_query.opusername
+        adminuserid = adminuser_query.opuserid
+        adminmobile = adminuser_query.opmobile
+        defaultcompany = adminuser_query.default
+        admimemail = company_query.companyemail
+        companymark = company_query.companymark
+
+        if companyexpire:
+            companyexpire = int(round(time.mktime(companyexpire.timetuple()) * 1000))
+        rs_query_dict = {'companyid':companyid, 'companyname': companyname, 'adminusername': adminusername,'adminuserid':adminuserid,
+                'adminmobile': adminmobile,'adminemail':admimemail,"zabbixid":zabbixid,"zabbixserver":zabbixserver,"zabbixuser":zabbixuser,"zabbixpassword":zabbixpassword,
+                'companyexpire': companyexpire,'totalhost':totalhost,"zabbix_exist":zabbix_exist,"disable":disable,
+                'companyrole':companyrole, 'members':totalcompanyusers,
+                         'companymark': companymark,'defaultcompany':defaultcompany
+                }
+        rs_query_list.append(rs_query_dict)
+    db.session.close()
+    return {"status": 0, "msg":"查询成功", 'pagetotal':page_total,"companyinfo": rs_query_list}
+
+
 def backstagetryouts(userid, token, page):
     if token != '11111':
         return {'status':1, 'msg':'token不可用'}

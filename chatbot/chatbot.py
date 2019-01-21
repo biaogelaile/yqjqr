@@ -60,8 +60,8 @@ def botsendmsgtype2(username):
                  {'name': '查看主机内存', 'type': '4'},
                  {'name': '查看磁盘状态', 'type': '6'},
                  {'name': '查看网络流量', 'type': '8'},
-                 {'name': '重启主机', 'type': '10'},
-                 {'name': '查看磁盘读写', 'type': '12'},
+                 {'name': '重启主机', 'type': '10'}
+                 # {'name': '查看磁盘读写', 'type': '12'},
                  ]}}}
     socket.emit('chatbot', sendmsgtype2)
     print('ooooooh yes')
@@ -425,7 +425,7 @@ def chatbot_response(*args):
                 host = botmsgdict['data']['msg']
                 print(host)
                 botsendmsgtype6(host)
-        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 10:
+        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 11:
                 print(botmsgdict['data'])
                 host = botmsgdict['data']['rootbean']['msg']
                 role = botmsgdict['data']['role']

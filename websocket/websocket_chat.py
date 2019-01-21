@@ -1,5 +1,4 @@
 # coding=utf-8
-
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 import requests
@@ -110,31 +109,94 @@ def talk_connect(msg):
 
 @socketio.on('chatbot')
 def chatbot_connect(msg):
-
     print('chatbot msg', msg)
+    print("$"*100)
+    print("6666666666666666666")
+    print(type(msg))
+    print(type(msg))
+    print(type(msg))
+    print(type(msg))
+    print(type(msg))
+    print(type(msg))
+    print("&"*100)
     token = msg['data']['token']
-    companyid = msg['data']['companyid']
+    if 'companyid' in msg['data']:
+        companyid = msg['data']['companyid']
+    else:
+        companyid = None
+    #company_info_rs = requests.get(apiserver + '/backstage/companymanage/companyinfo?token=' + token + '&companyid=' + companyid,headers=header)
+    #print(company_info_rs.json())
+    print("jdasjcjaj大神教大家讲解啊就擦家具擦")
+    print("jdasjcjaj大神教大家讲解啊就擦家具擦")
+    print("jdasjcjaj大神教大家讲解啊就擦家具擦")
+
     if 'msgid' in msg['data']:
         msgid = msg['data']['msgid']
     else:
         msgid = None
+    """ 
+    if 'type' in msg['data']:
+        type = msg['data']['type']
+    else:
+        type = None
+    """
+    chatbottype = msg['data']['type']
     if companyid:
         user_profile_rs = requests.get(apiserver + '/api/v1/user?token=' + token + '&companyid=' + companyid, headers=header)
     else:
         user_profile_rs = requests.get(apiserver + '/api/v1/youke?token=' + token,headers=header)
     print(user_profile_rs.json())
-    role = user_profile_rs.json()['role']
-    oprole = user_profile_rs.json()['oprole']
+    print("sajjajjsajdjjasdjajjdjajdadcjasjca")
+    print("sajjajjsajdjjasdjajjdjajdadcjasjca")
+    print("sajjajjsajdjjasdjajjdjajdadcjasjca")
+    print(user_profile_rs.json())
+    if 'role' in user_profile_rs.json():
+        role = user_profile_rs.json()['role']
+    if 'oprole' in user_profile_rs.json():
+        oprole = user_profile_rs.json()['oprole']
     user_companyrole = user_profile_rs.json()['companyrole']
     print(role)
+   
+    if chatbottype == 11:
+        print("我进来了擦拭内裤擦上擦出那就是今年擦上擦拿手菜·那就从女神经超难吃·那就看出那是擦擦·你擦上南昌那场·")
+        if companyid:
+            #company_info_rs = requests.get(apiserver + '/backstage/companymanage/companyinfo?token=' + token + '&companyid=' + companyid,headers=header)
+            # company_info_rs = company_info_rs.json()
+            #print(company_info_rs)
+            #print(company_info_rs)
+            #print(company_info_rs)
+            #print(company_info_rs)
+        
+            company_info_rs = requests.get(apiserver + '/backstage/companymanage/opusersinfo?token=' + token + '&companyid=' + companyid,headers=header)
+            company_info_rs = company_info_rs.json()
+            print("哈哈哈哈哈哈哈哈哈哈")
+            print("哈哈哈哈哈哈哈哈哈哈")
+            print("哈哈哈哈哈哈哈哈哈哈")
+            print("哈哈哈哈哈哈哈哈哈哈")
+            print(company_info_rs)
+            print("hi 啊 hi 啊 hi 啊 hi 啊 hi 啊")
+            print("hi 啊 hi 啊 hi 啊 hi 啊 hi 啊")
+            print("hi 啊 hi 啊 hi 啊 hi 啊 hi 啊")
+            print("hi 啊 hi 啊 hi 啊 hi 啊 hi 啊")
+            applyopusername = user_profile_rs.json()['opuser_name']
+            host = msg["data"]["rootbean"]["hostip"]
+            msg1 = "%s申请重启服务器%s"%(applyopusername,host)
+            print(msg1*10)
+            #msg = "顽童申请重启服务器10.0.60.175"
+            #这个地方还要加上审核员
+            for temp in company_info_rs["opuserinfo"]:
+                result1 = push_msg_to_android(temp["opuserid"], token, 'com.domain.operationrobot', '消息通知', msg1, 0, 'payload')
+                print(result1)
+                result2 =push_msg_to_ios(temp["opuserid"], token, 'com.domain.operationrobot', '消息通知', msg1, 'body')
+                print(result2)
+  
     if role == '1' or role == '2' or user_companyrole == '1':
         room = 'chatbotyouke11111'
     else:
         room = user_profile_rs.json()['companyname']
     join_room(room)
     print('room is:', room)
-    chatbottype = msg['data']['type']
-
+    #chatbottype = msg['data']['type']
     if chatbottype == 1:
         print('11111111111111111')
         if 'rootbean' in msg['data'] and msg['data']['rootbean']['msg'] == 'joinchatbotroom':
@@ -165,7 +227,7 @@ def chatbot_connect(msg):
             emit('chatbotstatus', msg, room=room)
     elif chatbottype == 2:
         print('2222222222222')
-        msg['data']['role'] = oprole
+        msg['data']['role'] = role
         msg['data']['oprole'] = oprole
         msg['data']['imageUrl'] = user_profile_rs.json()['imageUrl']
         msg['data']['mobile'] = user_profile_rs.json()['mobile']
@@ -190,7 +252,15 @@ def chatbot_connect(msg):
     elif chatbottype >= 3:
         print('333333333')
         print(msg)
-        msg['data']['role'] = oprole
+        print("$"*100)
+        print(type(msg))
+        print(type(msg))
+        print(type(msg))
+        print(type(msg))
+        print(type(msg))
+        print(type(msg))
+        print("&"*100)
+        msg['data']['role'] = role
         msg['data']['oprole'] = oprole
         msg['data']['imageUrl'] = user_profile_rs.json()['imageUrl']
         msg['data']['mobile'] = user_profile_rs.json()['mobile']
@@ -296,8 +366,8 @@ def push_msg_to_ios(userid,usertoken, package_name, title, subtitle, body):
         }
         return result
 
-result = push_msg_to_android('uz1NFGfV0Kp64WloxTNq5zmCU','jjjbbbkjjk', 'com.domain.operationrobot', '消息通知', '有人@你', 0,'payload')
-print(result)
+#result = push_msg_to_android('uz1NFGfV0Kp64WloxTNq5zmCU','jjjbbbkjjk', 'com.domain.operationrobot', '消息通知', '有人@你', 0,'payload')
+#print(result)
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0',port=5002)

@@ -13,7 +13,8 @@ payload = {"password": "youke-chatbot", "mobile": "youke-chatbot"}
 header = {'Content-Type': 'application/json'}
 
 loginrs = requests.post(apiurl, data=json.dumps(payload), headers=header)
-token = loginrs.json()['token']
+if loginrs:
+    token = loginrs.json()['token']
 companyid = None
 
 def botjoinroot(message):
@@ -35,8 +36,7 @@ def botsendmsgtype2(username):
                 [{'name': '查看主机CPU', 'type': '3'},
                  {'name': '查看主机内存', 'type': '4'},
                  {'name': '查看磁盘状态', 'type': '6'},
-                 {'name': '查看入网带宽', 'type': '8'},
-                 {'name': '查看出网带宽', 'type': '8'}
+                 {'name': '查看入网络流量', 'type': '8'}
                  ]}}}
     socket.emit('chatbot', sendmsgtype2)
     print('ooooooh yes')
@@ -54,7 +54,7 @@ def botsendmsgtype3(host):
             "actions": [
                 {
                 "title": "CPU",
-                "ratio": '30',
+                "ratio": '89',
                 }
             ]}}}
 
@@ -72,7 +72,7 @@ def botsendmsgtype4(host):
             "actions": [
                 {
                 "title": "内存",
-                "ratio": '32',
+                "ratio": '66',
                 }
             ]}}}
 
@@ -91,7 +91,7 @@ def botsendmsgtype6(host):
             "actions": [
                 {
                 "title": "磁盘",
-                "ratio": '16',
+                "ratio": '0',
                 }
             ]}}}
 

@@ -8,6 +8,13 @@ import os
 import datetime
 import time
 
+from APISender import APISender
+from base.APIMessage import *
+from base.APIConstants import *
+from APITools import *
+from APISubscribe import *
+import sys
+
 def phonecheck(mobile):
     n = mobile
     if len(n) != 11:
@@ -343,8 +350,8 @@ def user_update_username(token, userid, newusername):
             return {'status': 2, 'msg': '用户名长度不符合要求，用户名应在12字以内'}
         else:
             # return_userinfo = User.query.filter_by(userid=userid).first()
-            return_userinfo = Opuser.query.filter_by(opuserid=userid).first()
-            return_userinfo.opusername = newusername
+            return_userinfo = User.query.filter_by(userid=userid).first()
+            return_userinfo.username = newusername
             db.session.commit()
             db.session.close()
 
@@ -1248,6 +1255,65 @@ def company_query(companyname, token):
     except sqlalchemy.exc.OperationalError:
         return {'Oooops': '数据库连接似乎出了问题'}
 
+#这个接口是我新添的，没有暴露出来
+def backstagecm1(userid, token, searchcompanyid):
+    if token != '11111':
+        return {'status':1, 'msg':'token不可用'}
+
+    #公司总数量
+    rs_query_list = []
+    #companys_query = Company.query.all()
+
+    companys_query = Company.query.filter_by(companyid=searchcompanyid).all()
+
+  
+
+    for company_query in companys_query:
+        companyid = company_query.companyid
+        companyname = company_query.companyname
+        disable = company_query.disable
+        companyexpire = company_query.companyexpiredate
+        companyrole = company_query.companyrole
+        user_query = Opuser.query.filter_by(opcompanyid=companyid).all()
+        totalcompanyusers = len(user_query)
+        adminuser_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
+        adminusername = adminuser_query.opusername
+        adminuserid = adminuser_query.opuserid
+        adminmobile = adminuser_query.opmobile
+        defaultcompany = adminuser_query.default
+        admimemail = company_query.companyemail
+        companymark = company_query.companymark
+
+        if companyexpire:
+            companyexpire = int(round(time.mktime(companyexpire.timetuple()) * 1000))
+        rs_query_dict = {'companyid':companyid, 'companyname': companyname, 'adminusername': adminusername,'adminuserid': adminuserid,
+                'adminmobile': adminmobile,'adminemail':admimemail,
+                'companyexpire': companyexpire,"disable":disable,
+                'companyrole':companyrole, 'members':totalcompanyusers,
+                         'companymark': companymark,'defaultcompany':defaultcompany
+                }
+        rs_query_list.append(rs_query_dict)
+    db.session.close()
+    return {"status": 0, "msg":"查询成功","companyinfo": rs_query_list}
+
+def opusersinfo(userid, token, searchcompanyid):
+    if token != '11111':
+        return {'status':1, 'msg':'token不可用'}
+
+    rs_query_list = []
+    #companys_query = Company.query.all()
+
+    company_query = Company.query.filter_by(companyid=searchcompanyid).first()
+    companyid = company_query.companyid
+    user_query = Opuser.query.filter_by(opcompanyid=companyid).all()
+    for opuser in user_query:
+        if opuser.oprole == '4' or opuser.oprole == '6':
+            rs_query_dict = {'opuserid': opuser.opuserid }
+            rs_query_list.append(rs_query_dict)
+    db.session.close()
+    return {"status": 0, "msg":"查询成功","opuserinfo": rs_query_list}
+
+
 def company_insert(email, username, companyname, userid, token):
     try:
         #2 代表邮箱为空
@@ -1324,6 +1390,14 @@ def join_company(userid, companyid, username , token):
                 if check_user_role_query.role == '1':
                     check_user_role_query.role = '2'
 
+                admin_userid_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
+                topic_admin_userid = admin_userid_query.opuserid
+
+                msg = "%s申请加入公司" % username
+                result1 = push_msg_to_android(topic_admin_userid, token, 'com.domain.operationrobot', '消息通知', msg, 0, 'payload')
+                print(result1)
+                result2 = push_msg_to_ios(topic_admin_userid, token, 'com.domain.operationrobot', '消息通知', msg, 'body')
+                print(result2)
                 insert_opuserinfo = Opuser(opusername=username, opcompanyid=companyid,
                                         opmobile=mobile, opuserid=request_userid,
                                         oprole='2')
@@ -1372,7 +1446,15 @@ def join_company(userid, companyid, username , token):
                                         oprole='2')
                 db.session.add(insert_companyinfo)
                 db.session.commit()
+            
+            admin_userid_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
+            topic_admin_userid = admin_userid_query.opuserid
 
+            msg = "%s申请加入公司" % username
+            result1 = push_msg_to_android(topic_admin_userid, token, 'com.domain.operationrobot', '消息通知', msg, 0, 'payload')
+            print(result1)
+            result2 = push_msg_to_ios(topic_admin_userid, token, 'com.domain.operationrobot', '消息通知', msg, 'body')
+            print(result2)
             admin_userid_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
             topic_admin_userid = admin_userid_query.opuserid
             insert_topic = Topic(admin_userid=topic_admin_userid, request_username=username,
@@ -2061,3 +2143,90 @@ def updateopuserdefaultcompany(usertoken, opuserid, opcompanyid):
 
     except sqlalchemy.exc.OperationalError:
         return {'Oooops': 'There is a problem with the database'}
+
+def push_msg_to_android(userid,usertoken, package_name, title, description, pass_through,payload):
+    APP_SecKey = r"lsoNVMUZH69YvcsLR6SHNQ=="
+    result_code = 0
+    try:
+
+
+        # build android message
+        message = PushMessage() \
+            .restricted_package_name(package_name) \
+            .title(title).description(description) \
+            .pass_through(pass_through).payload(payload) \
+            .extra({Constants.extra_param_notify_effect: Constants.notify_launcher_activity})
+
+    except:
+        print("get parameters value error ! ", sys.exc_info()[0])
+        msg = "get parameters value error "
+        result = {
+            "msg": msg,
+            "status": result_code
+        }
+        return result
+
+    try:
+        sender = APISender(APP_SecKey)
+        recv = sender.send_to_user_account(message.message_dict(), userid)
+        print(recv)
+
+    except:
+        print("send msg was failed ! ", sys.exc_info()[0])
+        result_code = 1
+        msg = "send msg was failed "
+    finally:
+        msg = "succecss"
+        result = {
+            "msg": msg,
+            "status": result_code
+        }
+        return result
+
+
+
+
+def push_msg_to_ios(userid,usertoken, package_name, title, subtitle, body):
+    APP_SecKey = r"XWd6+oOcSmliC4jJJsdrcw=="
+    result_code = 0
+    try:
+        message_ios10 = PushMessage() \
+            .restricted_package_name(package_name) \
+            .aps_title(title) \
+            .aps_subtitle(subtitle) \
+            .aps_body(body) \
+            .aps_mutable_content("1") \
+            .sound_url("default") \
+            .badge(1) \
+            .category("action") \
+            .extra({"key": "value"})
+
+    except:
+        print("get parameters value error ! ", sys.exc_info()[0])
+        result_code = 1
+        msg = "get parameters value error "
+        result = {
+            "msg": msg,
+            "status": result_code
+        }
+        return result
+
+    try:
+        sender = APISender(APP_SecKey)
+
+        recv_ios = sender.send_to_user_account(message_ios10.message_dict_ios(), userid)
+        print(recv_ios)
+
+
+        tools = APITools(APP_SecKey)
+    except:
+        print("send msg was failed ! ", sys.exc_info()[0])
+        result_code = 1
+        msg = "send msg was failed "
+    finally:
+        msg = "succecss"
+        result = {
+            "msg": msg,
+            "status": result_code
+        }
+        return result

@@ -14,6 +14,8 @@ import fnmatch
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
+
+"""
 fmt_str = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig()
 filename_head = os.getcwd() + "/logs/rebot.log"
@@ -25,7 +27,7 @@ fileshandle.setFormatter(formatter)
 logger = logging.getLogger("zabbix_quey")
 logger.addHandler(fileshandle)
 logger.setLevel(logging.INFO)
-
+"""
 
 def generate_random_str(randomlength=16):
     """
@@ -637,7 +639,11 @@ def zabbix_get_complay_hosts(usertoken, companyid):
                                     temp_liebiao.remove(j)
                                     # 为已经存在的字典增加一个字段
                                     network_value["available"] = float(item["lastvalue"]) / 1024 / 1024 / 1024
-
+                                    print("sfsfsfsdsdfsdfsdfsfsfsf*******************")
+                                    print(network_value["available"])
+                                    print(network_value["available"])
+                                    print(network_value["available"])
+                                    print("fsfsfsfsdfsfsfsfsfsfsfsf*******************")
                                     # temp_liebiao[k]["available"] = float(item["lastvalue"])/1024/1024/1024
                                     temp_liebiao.append(network_value)
                                     break
@@ -645,7 +651,13 @@ def zabbix_get_complay_hosts(usertoken, companyid):
                                 if len(temp_liebiao) == k:
                                     # 否则新生成个字典
                                     temp_dict["key"] = "memory"
+                                    #temp_dict["available"] = float(item["lastvalue"]) / 1024 / 1024 / 1024
                                     temp_dict["available"] = float(item["lastvalue"]) / 1024 / 1024 / 1024
+                                    print("12121212121212121211212*******************")
+                                    print(temp_dict["available"])
+                                    print(temp_dict["available"])
+                                    print(temp_dict["available"])
+                                    print("12121212121212121211212*******************")
                                     temp_liebiao.append(temp_dict)
                                     break
                                 k += 1
@@ -727,6 +739,4 @@ def zabbix_get_complay_hosts(usertoken, companyid):
         }
         #print(demjson.encode(result))
         return result
-
-
 

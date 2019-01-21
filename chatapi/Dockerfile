@@ -10,4 +10,6 @@ RUN pip3 install  -i https://pypi.douban.com/simple uwsgi
 RUN pip3 install  -i https://pypi.douban.com/simple demjson
 ADD . /data
 #CMD ["python3", "http_chat.py"]
+RUN python3 setup.py sdist
+RUN python3 setup.py install
 CMD ["uwsgi", "--ini", "chatapi.ini"]

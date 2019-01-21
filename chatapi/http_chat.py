@@ -403,6 +403,24 @@ def BackstageSearch(companyname):
     joininfors = houtai.backstagecm(userid, usertoken, companyname)
     return jsonify(joininfors)
 
+@app.route('/backstage/companymanage/companyinfo', methods=['GET'])
+def BackstageSearch1():
+    companyid = request.args.get("companyid")
+    token = request.args.get('token')
+    userid = token.split('-')[0]
+    usertoken = token.split('-')[1]
+    joininfors = backstagecm1(userid, usertoken, companyid)
+    return jsonify(joininfors)
+
+@app.route('/backstage/companymanage/opusersinfo', methods=['GET'])
+def Opusersinfo():
+    companyid = request.args.get("companyid")
+    token = request.args.get('token')
+    userid = token.split('-')[0]
+    usertoken = token.split('-')[1]
+    joininfors = opusersinfo(userid, usertoken, companyid)
+    return jsonify(joininfors)
+
 @app.route('/backstage/tryouts', methods=['GET'])
 def BackstageTryOut():
     token = request.args.get('token')
@@ -854,26 +872,26 @@ def search_operation_search_condition():
                         "orderId":"22"
                     }]
                     },
-                    {
-                        "groupName": "数据库查询",
-                        "orders":[
-                                {
-                        "name":"查询数据库表空间",
-                        "orderId":"30"
-                    },
-                    {
-                        "name":"查询单表空间",
-                        "orderId":"31"
-                    },
-                    {
-                        "name":"查询数据库锁",
-                        "orderId":"32"
-                    },
-                    {
-                        "name":"查询数据库会话数",
-                        "orderId":"32"
-                    }]
-                    },
+                    #{
+                    #    "groupName": "数据库查询",
+                    #    "orders":[
+                    #            {
+                    #    "name":"查询数据库表空间",
+                    #    "orderId":"30"
+                    # },
+                    # {
+                    #    "name":"查询单表空间",
+                    #    "orderId":"31"
+                    # },
+                    # {
+                    #    "name":"查询数据库锁",
+                    #    "orderId":"32"
+                    # },
+                    # {
+                    #    "name":"查询数据库会话数",
+                    #    "orderId":"32"
+                    # }]
+                    # },
 					{
                         "groupName": "命令操作日志",
                         "orders":[
@@ -954,15 +972,9 @@ def search_operation_search_condition():
 
                     },
                     {
-                        "name":"查看磁盘空间",
+                        "name":"查看磁盘状态",
                         "orderId":"13",
                         "type":'6'
-                    },
-                    {
-                        "name":"查看磁盘读写",
-                        "orderId":"4",
-                        "type":"12"
-
                     }
                     ]},
                     {
@@ -974,12 +986,12 @@ def search_operation_search_condition():
                         "type":"10"
                     }]
                     },
-                    {
-                        "groupName": "数据库查询",
-                        "orders":[
-                          
-                    ]
-                    },
+                    #{
+                    #    "groupName": "数据库查询",
+                    #    "orders":[
+                    #      
+                    #]
+                    #},
 		    {
                         "groupName": "命令操作日志",
                         "orders":[

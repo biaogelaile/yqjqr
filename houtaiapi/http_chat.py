@@ -41,6 +41,18 @@ def BackstageSearch(companyname):
     joininfors = backstagecm(userid, usertoken, companyname, page)
     return jsonify(joininfors)
 
+@app.route('/backstage/companymanage/<string:companyid>', methods=['GET'])
+def BackstageSearch1(companyid):
+    token = request.args.get('token')
+    userid = token.split('-')[0]
+    usertoken = token.split('-')[1]
+    if request.args.get('page'):
+        page = request.args.get('page')
+    else:
+        page = 1
+    joininfors = backstagecm1(userid, usertoken, companyid, page)
+    return jsonify(joininfors)
+
 @app.route('/backstage/tryouts', methods=['GET'])
 def BackstageTryOut():
     token = request.args.get('token')

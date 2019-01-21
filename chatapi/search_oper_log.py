@@ -6,7 +6,7 @@ from sqlalchemy import desc
 import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
-
+"""
 fmt_str = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig()
 filename_head = os.getcwd() + "/logs/rebot.log"
@@ -18,7 +18,7 @@ fileshandle.setFormatter(formatter)
 logger = logging.getLogger("salt_exec")
 logger.addHandler(fileshandle)
 logger.setLevel(logging.INFO)
-
+"""
 def search_oper_log(usertoken, companyid):
     status = 0
     #每次查询数量
@@ -104,6 +104,16 @@ def operation_search_condition(usertoken, companyid, search_command=None, search
                     one_recode["orderId"] = str(com.command_id)
                     if one_recode["orderId"] == "1":
                         one_recode["type"] = "10"
+                    elif one_recode["orderId"] == "3":
+                        one_recode["type"] = "3"
+                    elif one_recode["orderId"] == "4":
+                        one_recode["type"] = "6"
+                    elif one_recode["orderId"] == "5":
+                        pass
+                    elif one_recode["orderId"] == "6":
+                        one_recode["type"] = "4"
+                    elif one_recode["orderId"] == "7":
+                        one_recode["type"] = "8"
                     one_recode["name"] = com.command_displayname
                     commands.append(one_recode)
                 one_group_result["orders"] = commands

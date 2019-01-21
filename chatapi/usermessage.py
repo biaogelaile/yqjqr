@@ -116,10 +116,10 @@ def usermessage_query(usertoken, userid, companyid, usermsgid):
 
                 user_message_query_page_total = len(user_message_query_page)
 
-                if user_message_query_page_total > 300:
+                if user_message_query_page_total > 100:
 
                     user_message_query_page = Talkmsg.query.filter(Talkmsg.msgcompanyid == companyid).order_by(
-                                            Talkmsg.createtime.desc()).paginate(1, per_page=300, error_out=False)
+                                            Talkmsg.createtime.desc()).paginate(1, per_page=100, error_out=False)
 
                     rs = user_message_query_page.items
                     msg_rs_list = []
@@ -141,7 +141,7 @@ def usermessage_query(usertoken, userid, companyid, usermsgid):
 
         else:
             user_message_query_page = Talkmsg.query.filter(Talkmsg.msgcompanyid == companyid).order_by(
-                Talkmsg.createtime.desc()).paginate(1, per_page=300, error_out=False)
+                Talkmsg.createtime.desc()).paginate(1, per_page=100, error_out=False)
 
 
 

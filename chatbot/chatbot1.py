@@ -299,15 +299,14 @@ def botsendmsgtype1(username):
     print('ooooooh yes')
 
 
-def botsendmsgtype11(host,role, oprole, action):
+def botsendmsgtype10(host,role, oprole, action):
     msgid = generate_random_str(32)
     if role == '8':
         botjoinroot("Oooops, 用户已被禁用")
     if oprole == '3' and action == 'request':
-        print("csvcjsdnvjlll看见打草惊蛇擦擦擦卡年级开始就擦撒擦擦女乘客手机内存是得寸进尺你呢你才是打草惊蛇你擦鸡肠鼠肚据说 v 你说呢你是冬季女士 v 是 v；1v 你是 v 难道是 v；是")
 
-        sendmsgtype11 = {'data': {'type':11, 'token': token,'msgid':msgid, 'companyid':companyid,
-                              'rootbean':{'msg': '我需要执行 重启服务器' + host + '(ip:' + host + ')的命令',
+        sendmsgtype10 = {'data': {'type':11, 'token': token,'msgid':msgid, 'companyid':companyid,
+                              'rootbean':{'msg': '我需要执行 重启服务器 ' + host + '(ip:' + host + ')的命令',
                                           'hostip':host, 'msgid':msgid}}}
         socket.emit('chatbot', sendmsgtype11)
     elif oprole == '4' or oprole == '6':
@@ -426,20 +425,14 @@ def chatbot_response(*args):
                 host = botmsgdict['data']['msg']
                 print(host)
                 botsendmsgtype6(host)
-        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 10:
-                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
-                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
-                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
+        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 11:
                 print(botmsgdict['data'])
-                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
-                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
-                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
                 host = botmsgdict['data']['rootbean']['msg']
                 role = botmsgdict['data']['role']
                 oprole = botmsgdict['data']['oprole']
                 action = botmsgdict['data']['rootbean']['action']
                 print(host, role, oprole, action)
-                botsendmsgtype11(host,role, oprole, action)
+                botsendmsgtype10(host,role, oprole, action)
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 12:
             print(botmsgdict['data'])
             host = botmsgdict['data']['msg']

@@ -233,6 +233,7 @@ def chatbot_connect(msg):
         msg['data']['mobile'] = user_profile_rs.json()['mobile']
         msg['data']['username'] = user_profile_rs.json()['opuser_name']
         msg['data']['userid'] = user_profile_rs.json()['userid']
+        msg['data']
         del msg['data']['token']
         print(msg)
         print('msgid', msgid)

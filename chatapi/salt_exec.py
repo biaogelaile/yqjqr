@@ -18,7 +18,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 
 
-"""
+
 fmt_str = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig()
 filename_head = os.getcwd() + "/logs/rebot.log"
@@ -30,7 +30,7 @@ fileshandle.setFormatter(formatter)
 logger = logging.getLogger("salt_exec")
 logger.addHandler(fileshandle)
 logger.setLevel(logging.INFO)
-"""
+
 context = ssl._create_unverified_context()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

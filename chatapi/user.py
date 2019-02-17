@@ -1313,6 +1313,17 @@ def opusersinfo(userid, token, searchcompanyid):
     db.session.close()
     return {"status": 0, "msg":"查询成功","opuserinfo": rs_query_list}
 
+def hostinfo(userid, token, hostip):
+    if token != '11111':
+        return {'status':1,'msg':'token不可用'}
+    print("兹纳库嚓嚓灿灿拿出拉开"+hostip)
+    rs_query_list = []
+    host =Monitor.query.filter_by(zabbixhostip="10.0.60.175").first()
+    hostname = host.zabbixhostname
+    rs_query_dict = {'hostname': hostname}
+    rs_query_list.append(rs_query_dict)
+    db.session.close()
+    return {"status": 0, "msg":"查询成功","hostinfo": rs_query_list}
 
 def company_insert(email, username, companyname, userid, token):
     try:
@@ -1743,6 +1754,53 @@ def join_update(userid, token, request_userid, admin_action, request_companyid):
         return {'Oooops': 'There is a problem with the database'}
 
 
+def commandstatus(userid, token, companyid):
+    try:
+        print(userid,companyid)
+        if token != '11111':
+            return {'status':1,'msg':'token不可用'}
+        commands = CompanyCommandStatus.query.filter_by(companyid=companyid).all()
+        commandstatus_list = []
+        for command in commands:
+            operacommand_dict = {}
+            operacommand = OperaCommand.query.filter_by(command_id=command.command_id).first()
+            operacommand_dict["command_displayname"] = operacommand.command_displayname
+            operacommand_dict['commandtype'] = operacommand.commandtype
+            operacommand_dict["commandstatus"] = command.commandstatus
+            operacommand_dict['command_id'] = command.command_id
+            commandstatus_list.append(operacommand_dict)
+
+        db.session.close()
+        return {'status': 0, 'msg': '查询成功', 'info': commandstatus_list}
+
+    except sqlalchemy.exc.OperationalError:
+        db.session.close()
+        return {'status': 2, 'Oooops': 'There is a problem with the database'}
+
+
+def updatecommandstatus(adminuserid, usertoken, companyid,commandstatus_list):
+
+    try:
+        if usertoken != '11111':
+            return {'status':1,'msg':'Token无效'}
+        admin_opuser_query = Opuser.query.filter_by(opuserid=adminuserid,opcompanyid=companyid,oprole='4').first()
+
+        if admin_opuser_query is None:
+            db.session.close()
+            return {'status':2,'msg':'没有权限'}
+
+        for status in commandstatus_list:
+            commands = CompanyCommandStatus.query.filter_by(companyid=companyid).all()
+            for command in commands:
+                if command.command_id == status['command_id']:
+                    command.commandstatus = status['commandstatus']
+        db.session.commit()
+        db.session.close()
+        return {'status':0,'msg':'修改成功'}
+
+    except sqlalchemy.exc.OperationalError:
+        return {'Oooops':'There is a problem with the database'}
+
 def opusers(userid, token, companyid):
     try:
         print(userid, companyid)
@@ -1761,6 +1819,7 @@ def opusers(userid, token, companyid):
         if user_check_query.oprole == '2':
             db.session.close()
             return {'status': 3, 'msg': "没有权限查看此页面"}
+
         users_query = Opuser.query.filter_by(opcompanyid=companyid).all()
         opuser_list = []
         for user_query in users_query:
@@ -1815,9 +1874,7 @@ def opuser(userid, token, username, companyid):
         if user_check_query.oprole == '2':
             db.session.close()
             return {'status': 3, 'msg': "没有权限查看此页面"}
-
         opusers_query = Opuser.query.filter_by(opcompanyid=companyid).all()
-
         opuser_list = []
         for opuser_query in opusers_query:
             opuser_dict = {}

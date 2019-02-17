@@ -51,7 +51,6 @@ def talk_response(*args):
     print('talk zzzzzzzzzzz')
     print(args[0])
 
-
 def botsendmsgtype2(username):
     msgid = generate_random_str(48)
     sendmsgtype2 = {'data': {'type': 2,'companyid':companyid,'msgid':msgid, 'token': token, 'rootbean':
@@ -290,8 +289,6 @@ def botsendmsgtype6(host):
     socket.emit('chatbot', sendmsgtype6)
     print('ooooooh yes')
 
-
-
 def botsendmsgtype1(username):
     msgid = generate_random_str(48)
     sendmsgtype1 = {'data': {'type':1, 'token': token,'msgid':msgid,'companyid':companyid, 'rootbean':{'msg': '你好，'+ username}}}
@@ -299,43 +296,103 @@ def botsendmsgtype1(username):
     print('ooooooh yes')
 
 
-def botsendmsgtype11(host,role, oprole, action):
+def botsendmsgtype11(host ,role, oprole, action, commandType):
     msgid = generate_random_str(32)
     if role == '8':
-        botjoinroot("Oooops, 用户已被禁用")
+        botjoinroot("Oooops, 用户已被禁用Oooops")
     if oprole == '3' and action == 'request':
         print("csvcjsdnvjlll看见打草惊蛇擦擦擦卡年级开始就擦撒擦擦女乘客手机内存是得寸进尺你呢你才是打草惊蛇你擦鸡肠鼠肚据说 v 你说呢你是冬季女士 v 是 v；1v 你是 v 难道是 v；是")
+        if commandType == 3:
+            sendmsgtype11 = {'data': {'type':11, 'token': token,'msgid':msgid, 'companyid':companyid,"commnadType":commandType,
+                                  'rootbean':{'msg': '我需要执行 查看主机cpu' + host + '(ip:' + host + ')的命令',
+                                              'hostip':host, 'msgid':msgid}}}
+            socket.emit('chatbot', sendmsgtype11)
+        elif commandType == 4:
+            sendmsgtype11 = {'data': {'type':11, 'token': token,'msgid':msgid, 'companyid':companyid,"commnadType":commandType,
+                                  'rootbean':{'msg': '我需要执行 查看主机内存' + host + '(ip:' + host + ')的命令',
+                                              'hostip':host, 'msgid':msgid}}}
+            socket.emit('chatbot', sendmsgtype11)
+        elif commandType == 6:
+            sendmsgtype11 = {'data': {'type': 11, 'token': token, 'msgid': msgid, 'companyid': companyid,"commnadType":commandType,
+                                      'rootbean': {'msg': '我需要执行 查看磁盘状态' + host + '(ip:' + host + ')的命令',
+                                                   'hostip': host, 'msgid': msgid}}}
+            socket.emit('chatbot', sendmsgtype11)
+        elif commandType == 8:
+            sendmsgtype11 = {'data': {'type': 11, 'token': token, 'msgid': msgid, 'companyid': companyid,"commnadType":commandType,
+                                      'rootbean': {'msg': '我需要执行 查看网络流量' + host + '(ip:' + host + ')的命令',
+                                                   'hostip': host, 'msgid': msgid}}}
+            socket.emit('chatbot', sendmsgtype11)
+        elif commandType == 10:
+            sendmsgtype11 = {'data': {'type': 11, 'token': token, 'msgid': msgid, 'companyid': companyid,"commnadType":commandType,
+                                      'rootbean': {'msg': '我需要执行 重启主机' + host + '(ip:' + host + ')的命令',
+                                                   'hostip': host, 'msgid': msgid}}}
+            socket.emit('chatbot', sendmsgtype11)
 
-        sendmsgtype11 = {'data': {'type':11, 'token': token,'msgid':msgid, 'companyid':companyid,
-                              'rootbean':{'msg': '我需要执行 重启服务器' + host + '(ip:' + host + ')的命令',
-                                          'hostip':host, 'msgid':msgid}}}
-        socket.emit('chatbot', sendmsgtype11)
+
     elif oprole == '4' or oprole == '6':
         if action == 'agree' or action == 'request':
-            print('执行中...')
+            if commandType == 10:
+                print('重启执行中...')
 
-            rebooturl = serverip + '/api/v1/salt/command'
-            usertoken = token.split('-')[1]
-            userid = token.split('-')[0]
-            payload = {"usertoken": usertoken,
-                       "userid":userid,
-                        "clientip":host,
-                        "command":"reboot",
-                        "companyid":companyid}
+                rebooturl = serverip + '/api/v1/salt/command'
+                usertoken = token.split('-')[1]
+                userid = token.split('-')[0]
+                payload = {"usertoken": usertoken,
+                           "userid":userid,
+                            "clientip":host,
+                            "command":"reboot",
+                            "companyid":companyid}
 
-            rebootrs = requests.post(url=rebooturl, data=json.dumps(payload), headers=header)
+                rebootrs = requests.post(url=rebooturl, data=json.dumps(payload), headers=header)
 
-            if rebootrs.status_code == 200:
-                rebootrs_dict_str = rebootrs.json()
-                rebootrs_dict = eval(rebootrs_dict_str)
-                status = rebootrs_dict['status']
-                if status == 0:
-                    sendmsg(host + " 重启成功!")
-                else:
-                    sendmsg(host + " 重启失败!, " + rebootrs_dict['result'])
+                rebootrs.status_code = 200
+
+                if rebootrs.status_code == 200:
+                    rebootrs_dict_str = rebootrs.json()
+                    rebootrs_dict = eval(rebootrs_dict_str)
+                    status = rebootrs_dict['status']
+                    if status == 0:
+                        sendmsg(host + " 重启成功!")
+                    else:
+                        sendmsg(host + " 重启失败!, " + rebootrs_dict['result'])
+            elif commandType == 3:
+                print('查看主机cpu执行中...')
+                print(botmsgdict['data'])
+                host = botmsgdict['data']['hostip']
+                print(host)
+                botsendmsgtype3(host)
+            elif commandType == 4:
+                print('查看主机cpu执行中...')
+                print(botmsgdict['data'])
+                host = botmsgdict['data']['hostip']
+                print(host)
+                botsendmsgtype4(host)
+            elif commandType == 6:
+                print('查看主机cpu执行中...')
+                print(botmsgdict['data'])
+                host = botmsgdict['data']['hostip']
+                print(host)
+                botsendmsgtype3(host)
+            elif commandType == 8:
+                print('查看主机cpu执行中...')
+                print(botmsgdict['data'])
+                host = botmsgdict['data']['hostip']
+                print(host)
+                botsendmsgtype3(host)
+
         else:
             print('已拒绝...')
-            sendmsg(host + " ： 此主机重启申请已被拒绝!")
+            if commandType == 10:
+                sendmsg(host + " ： 此主机重启申请已被拒绝!")
+            elif commandType == 3:
+                sendmsg(host + " ： 查看此主机CPU已被拒绝!")
+            elif commandType == 4:
+                sendmsg(host + " ： 查看此主机内存已被拒绝")
+            elif commandType == 6:
+                sendmsg(host + " ： 查看此主机磁盘状态已被拒绝!")
+            elif commandType == 8:
+                sendmsg(host + " ： 查看此主机网络流量已被拒绝!")
+
 
     print('ooooooh yes')
 
@@ -393,7 +450,6 @@ def botsendmsgtype12(host, role, oprole):
     print('ooooooh yes')
 
 
-
 def chatbot_response(*args):
     try:
         print('chatbot zzzzzzzzzzz')
@@ -406,26 +462,6 @@ def chatbot_response(*args):
             print('lalalalalalalalal')
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 2:
             botsendmsgtype2(username)
-        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 3:
-                print(botmsgdict['data'])
-                host = botmsgdict['data']['msg']
-                print(host)
-                botsendmsgtype3(host)
-        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 4:
-                print(botmsgdict['data'])
-                host = botmsgdict['data']['msg']
-                print(host)
-                botsendmsgtype4(host)
-        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 8:
-                print(botmsgdict['data'])
-                host = botmsgdict['data']['msg']
-                print(host)
-                botsendmsgtype8(host)
-        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 6:
-                print(botmsgdict['data'])
-                host = botmsgdict['data']['msg']
-                print(host)
-                botsendmsgtype6(host)
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 10:
                 print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
                 print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
@@ -438,17 +474,12 @@ def chatbot_response(*args):
                 role = botmsgdict['data']['role']
                 oprole = botmsgdict['data']['oprole']
                 action = botmsgdict['data']['rootbean']['action']
-                print(host, role, oprole, action)
-                botsendmsgtype11(host,role, oprole, action)
-        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 12:
-            print(botmsgdict['data'])
-            host = botmsgdict['data']['msg']
-            role = botmsgdict['data']['role']
-            oprole = botmsgdict['data']['oprole']
-            print(host, role, oprole)
-            botsendmsgtype12(host=host, role=role, oprole=oprole)
+                commandType = botmsgdict['data']['commandType']
+                print(host, role, oprole, action,commandType)
+                botsendmsgtype11(host,role, oprole, action,commandType)
+
     except:
-        print("Ooops, somethings waring") 
+        print("Ooops, somethings waring")
 
 def conn():
     socket.emit('conn', 'test')
@@ -456,12 +487,10 @@ def conn():
     socket.on('connstatus', conn_response)
     socket.wait(seconds=1)
 
-
 def onlyconn():
     socket.emit('conn', 'test')
     socket.on('connstatus', conn_response)
     socket.wait(seconds=1)
-
 
 def chatbots():
     while True:
@@ -473,6 +502,24 @@ def talks():
         socket.on('talkstatus', talk_response)
         socket.wait(seconds=1)
 
+def botjoinroot(message):
+    msgid = generate_random_str(48)
+    sendmsg = {'token': token,'role':'chatbot', 'companyid':companyid, 'msg': message, 'msgid':msgid}
+    socket.emit('talk', sendmsg)
+
+def sendmsg(message):
+    msgid = generate_random_str(48)
+    sendmsg = {'token': token, 'companyid':companyid, 'msg': message, 'msgid':msgid}
+    socket.emit('talk', sendmsg)
+
+
+def conn_response(*args):
+    print(args[0])
+
+
+def talk_response(*args):
+    print('talk zzzzzzzzzzz')
+    print(args[0])
 
 tada = threading.Thread(target=chatbots)
 tada.start()

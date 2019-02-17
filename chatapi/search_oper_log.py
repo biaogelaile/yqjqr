@@ -6,7 +6,7 @@ from sqlalchemy import desc
 import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
-"""
+
 fmt_str = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig()
 filename_head = os.getcwd() + "/logs/rebot.log"
@@ -18,7 +18,18 @@ fileshandle.setFormatter(formatter)
 logger = logging.getLogger("salt_exec")
 logger.addHandler(fileshandle)
 logger.setLevel(logging.INFO)
-"""
+
+fmt_str = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+logging.basicConfig()
+filename_head = os.getcwd() + "/logs/rebot.log"
+fileshandle = logging.handlers.TimedRotatingFileHandler(filename_head, when="midnight", interval=1, backupCount=30,
+                                                        encoding='utf-8', delay=False, utc=False)
+fileshandle.suffix = "%Y-%m-%d"
+formatter = logging.Formatter(fmt_str)
+fileshandle.setFormatter(formatter)
+logger = logging.getLogger("salt_exec")
+logger.addHandler(fileshandle)
+logger.setLevel(logging.INFO)
 def search_oper_log(usertoken, companyid):
     status = 0
     #每次查询数量

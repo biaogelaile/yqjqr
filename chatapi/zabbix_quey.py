@@ -15,7 +15,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 
 
-"""
+
 fmt_str = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig()
 filename_head = os.getcwd() + "/logs/rebot.log"
@@ -27,7 +27,6 @@ fileshandle.setFormatter(formatter)
 logger = logging.getLogger("zabbix_quey")
 logger.addHandler(fileshandle)
 logger.setLevel(logging.INFO)
-"""
 
 def generate_random_str(randomlength=16):
     """

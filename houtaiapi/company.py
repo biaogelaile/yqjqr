@@ -4,7 +4,10 @@ import time
 import requests, json
 from urllib.parse import unquote
 import math
+import string
 import re
+import random
+import sqlalchemy
 url = apiserverurl + "/api/v1/hosts?token=xxx-11111"
 
 
@@ -75,6 +78,8 @@ def zabbix_hosts_query(companyid):
                     "id": 1,
             })
         hosts = requests.post(zabbixurl + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+        
+        
         hosts_list =  hosts.json()['result']
         checkhosts_list = []
         for checkhost_dict in hosts_list:
@@ -147,7 +152,7 @@ def backstagecms(userid, token, page):
             zabbixserver = None
             zabbixuser = None
             zabbixpassword = None
-            zabbix_exist = "false"
+            zabbix_exist = "true"
         adminusername = adminuser_query.opusername
         defaultcompany = adminuser_query.default
         adminmobile = adminuser_query.opmobile
@@ -158,10 +163,12 @@ def backstagecms(userid, token, page):
                 expirestring = "即将到期"
             elif companyexpire <= todays_datetime:
                 expirestring = "停用中"
+            elif disable == 1:
+                expirestring = "停用中"
             else:
                 expirestring = "正常使用中"
             companyexpire = int(round(time.mktime(companyexpire.timetuple()) * 1000))
-        else:
+        elif disable == 0 and companyexpire is None:
             expirestring = "试用中"
         rs_query_dict = {'companyid':companyid, 'companyname': companyname, 'adminusername': adminusername,
           'adminmobile': adminmobile,'adminemail':companyemail,"zabbixid":zabbixid,"zabbixserver":zabbixserver,"zabbixuser":zabbixuser,"zabbixpassword":zabbixpassword,
@@ -719,6 +726,16 @@ def companydelete(userid, usertoken,companyname):
     db.session.close()
     return {'status': 0, 'msg': '删除成功'}
 
+def generate_random_str(randomlength=16):
+    """
+    生成一个指定长度的随机字符串，其中
+    string.digits=0123456789
+    string.ascii_letters=abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+    """
+    str_list = [random.choice(string.digits + string.ascii_letters) for i in range(randomlength)]
+    random_str = ''.join(str_list)
+    return random_str
+
 def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, zabbixusername, zabbixpassword):
     try:
         if usertoken != '11111':
@@ -730,11 +747,20 @@ def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, za
             #return {'status': 2, 'msg': '没有权限'}
 
         zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid).first()
-        zabbixinfo_query.zabbixid = zabbixid
-        zabbixinfo_query.zabbixserver = zabbixserver
-        zabbixinfo_query.zabbixusername = zabbixusername
-        zabbixinfo_query.zabbixpassword = zabbixpassword
-        db.session.commit()
-        return {'status':0, 'msg': '修改成功'}
+        if zabbixinfo_query:
+            zabbixinfo_query.zabbixid = zabbixid
+            zabbixinfo_query.zabbixserver = zabbixserver
+            zabbixinfo_query.zabbixusername = zabbixusername
+            zabbixinfo_query.zabbixpassword = zabbixpassword
+            db.session.commit()
+            return {'status':0, 'msg': '修改成功'}
+        else:
+            zabbixserverid = 'z' + generate_random_str()
+            insert_zabbixserver = Zabbix(companyid=companyid, zabbixid=zabbixserverid,
+                                         zabbixserver=zabbixserver, zabbixuser=zabbixusername,
+                                         zabbixpassword=zabbixpassword)
+            db.session.add(insert_zabbixserver)
+            db.session.commit()
+            return {'status': 0, 'msg': '添加成功'}
     except sqlalchemy.exc.OperationalError:
         return {'status': 3, 'Oooops': '数据库连接出现错误'}

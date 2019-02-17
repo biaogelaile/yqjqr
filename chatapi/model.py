@@ -184,6 +184,7 @@ class OperaCommand(db.Model):
     command_id = db.Column(db.Integer, nullable=False, unique=True, comment='命令ID')
     command_group_id = db.Column(db.String(128), nullable=False, comment='命令所属组ID')
     command = db.Column(db.String(128), nullable=False, comment='命令')
+    commandtype = db.Column(db.String(128), nullable=False, comment='命令类型')
     command_displayname = db.Column(db.String(128), nullable=False, comment='命令友好显示名')
     remark = db.Column(db.String(50), nullable=True, comment='备注')
 
@@ -196,5 +197,30 @@ class OperaCommandGroup(db.Model):
     command_group_id = db.Column(db.String(128), nullable=False, comment='命令所属组')
     command_group_displayname = db.Column(db.String(128), nullable=False, comment='命令组友好显示名')
     remark = db.Column(db.String(50), nullable=True, comment='备注')
+
+
+class CompanyCommandStatus(db.Model):
+    #定义表名
+    __tablename__ = 'tbl_companycommandstatus'
+    id = db.Column(db.Integer, primary_key=True)
+    #定义列对象
+    companyid = db.Column(db.String(128), nullable=False, comment='公司id')
+    command_id = db.Column(db.Integer, nullable=False, comment='命令id')
+    #commandstatus = db.Column(db.String(50), nullable=True, comment='命令状态')
+    commandstatus = db.Column(db.Boolean, nullable=True, default=0, comment='命令状态')
+
+
+class CommandCheck(db.model):
+    #定义表名
+    __tablename__ = 'tbl_commandcheck'
+    id = db.Column(db.Integer, primary_key=True)
+    checkeventid = db.Column(db.String(128), nullable=False, comment='审核事件id')
+    command_id = db.Column(db.Integer, nullable=False, comment='命令id')
+    applyuserid = db.Column(db.String(128), nullable=True, comment='申请人id')
+    applytime = db.Column(db.TIMESTAMP(True), nullable=True, comment='申请时间')
+    checkuserid = db.Column(db.String(128), nullable=True, comment='审核人id')
+    checktime = db.Column(db.TIMESTAMP(True), nullable=True, comment='审核时间')
+    commandcheckstatus = db.Column(db.Boolean, nullable=True, default=0, comment='命令审核状态')
+    exresult = db.Column(db.Boolean, nullable=True, default=0, comment='命令执行结果')
 
 db.create_all()

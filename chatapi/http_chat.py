@@ -243,6 +243,26 @@ def OpUser(username):
     joininfors = opuser(userid, usertoken, username, companyid)
     return jsonify(joininfors)
 
+@app.route('/api/v1/commandstatus', methods=['GET'])
+def CommandStatus():
+    token = request.args.get('token')
+    userid = token.split('-')[0]
+    usertoken = token.split('-')[1]
+    companyid = request.args.get('companyid')
+    joininfors = commandstatus(userid, usertoken, companyid)
+    return jsonify(joininfors)
+
+@app.route('/api/v1/commandstatus', methods=['PATCH', 'PUT'])
+def UpdateCommandStatus():
+    request_data = request.get_json()
+    token = request_data['token']
+    adminuserid = token.split('-')[0]
+    usertoken = token.split('-')[1]
+    companyid = request_data['companyid']
+    commandstatus_list = request_data['commandstatus_list']
+    joininfors = updatecommandstatus(adminuserid, usertoken, companyid,commandstatus_list)
+    return jsonify(joininfors)
+
 #添加运维用户
 @app.route('/api/v1/opuser', methods=['POST'])
 def AddOpUser():
@@ -419,6 +439,15 @@ def Opusersinfo():
     userid = token.split('-')[0]
     usertoken = token.split('-')[1]
     joininfors = opusersinfo(userid, usertoken, companyid)
+    return jsonify(joininfors)
+
+@app.route('/api/v1/hostinfo', methods=['GET'])
+def Hostinfo():
+    hostip = request.args.get("hostip")
+    token = request.args.get('token')
+    userid = token.split('-')[0]
+    usertoken = token.split('-')[1]
+    joininfors = hostinfo(userid, usertoken, hostip)
     return jsonify(joininfors)
 
 @app.route('/backstage/tryouts', methods=['GET'])

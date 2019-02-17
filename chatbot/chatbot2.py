@@ -6,6 +6,7 @@ import random
 import string
 
 #serverip = 'http://127.0.0.1:5000'
+apiserver = 'http://chatapi:5000'
 serverip = 'http://nginx-server:5001'
 socket = SocketIO('nginx-server',5001)
 apiurl =  serverip + '/api/v1/login'
@@ -299,14 +300,18 @@ def botsendmsgtype1(username):
     print('ooooooh yes')
 
 
-def botsendmsgtype10(host,role, oprole, action):
+def botsendmsgtype11(host,role, oprole, action):
+    print("三轮车马上开车没说了什么摩擦声了每次妈妈吃吗擦驴拉出来"+host)
+    print("三轮车马上开车没说了什么摩擦声了每次妈妈吃吗擦驴拉出来"+host)
+    print("三轮车马上开车没说了什么摩擦声了每次妈妈吃吗擦驴拉出来"+host)
     msgid = generate_random_str(32)
     if role == '8':
         botjoinroot("Oooops, 用户已被禁用")
     if oprole == '3' and action == 'request':
+        print("csvcjsdnvjlll看见打草惊蛇擦擦擦卡年级开始就擦撒擦擦女乘客手机内存是得寸进尺你呢你才是打草惊蛇你擦鸡肠鼠肚据说 v 你说呢你是冬季女士 v 是 v；1v 你是 v 难道是 v；是")
 
-        sendmsgtype10 = {'data': {'type':11, 'token': token,'msgid':msgid, 'companyid':companyid,
-                              'rootbean':{'msg': '我需要执行 重启服务器 ' + host + '(ip:' + host + ')的命令',
+        sendmsgtype11 = {'data': {'type':11, 'token': token,'msgid':msgid, 'companyid':companyid,
+                              'rootbean':{'msg': '我需要执行 重启服务器哈哈哈' + host + '(ip:' + host + ')的命令',
                                           'hostip':host, 'msgid':msgid}}}
         socket.emit('chatbot', sendmsgtype11)
     elif oprole == '4' or oprole == '6':
@@ -316,18 +321,23 @@ def botsendmsgtype10(host,role, oprole, action):
             rebooturl = serverip + '/api/v1/salt/command'
             usertoken = token.split('-')[1]
             userid = token.split('-')[0]
+            hostinfo = requests.get(apiserver + '/api/v1/hostinfo?token=' + token + '&hostip=' + host, headers=header)
+            hostinfo = hostinfo.json()
+            hostname = hostinfo["hostinfo"][0]["hostname"]
             payload = {"usertoken": usertoken,
                        "userid":userid,
                         "clientip":host,
                         "command":"reboot",
-                        "companyid":companyid}
+                        "companyid":companyid,
+                        "hostname":hostname}
 
             rebootrs = requests.post(url=rebooturl, data=json.dumps(payload), headers=header)
-
+            rebootrs.status_code = 200
             if rebootrs.status_code == 200:
-                rebootrs_dict_str = rebootrs.json()
-                rebootrs_dict = eval(rebootrs_dict_str)
-                status = rebootrs_dict['status']
+                #rebootrs_dict_str = rebootrs.json()
+                #rebootrs_dict = eval(rebootrs_dict_str)
+                #status = rebootrs_dict['status']
+                status = 0
                 if status == 0:
                     sendmsg(host + " 重启成功!")
                 else:
@@ -407,35 +417,47 @@ def chatbot_response(*args):
             botsendmsgtype2(username)
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 3:
                 print(botmsgdict['data'])
-                host = botmsgdict['data']['msg']
+                host = botmsgdict['data']['hostip']
+                #host = botmsgdict['data']['msg']
                 print(host)
                 botsendmsgtype3(host)
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 4:
                 print(botmsgdict['data'])
-                host = botmsgdict['data']['msg']
+                host = botmsgdict['data']['hostip']
+                #host = botmsgdict['data']['msg']
                 print(host)
                 botsendmsgtype4(host)
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 8:
                 print(botmsgdict['data'])
-                host = botmsgdict['data']['msg']
+                host = botmsgdict['data']['hostip']
+                #host = botmsgdict['data']['msg']
                 print(host)
                 botsendmsgtype8(host)
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 6:
                 print(botmsgdict['data'])
-                host = botmsgdict['data']['msg']
+                host = botmsgdict['data']['hostip']
+                #host = botmsgdict['data']['msg']
                 print(host)
                 botsendmsgtype6(host)
-        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 11:
+        elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 10:
+                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
+                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
+                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
                 print(botmsgdict['data'])
-                host = botmsgdict['data']['rootbean']['msg']
+                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
+                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
+                print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
+                #host = botmsgdict['data']['rootbean']['msg']
+                host = botmsgdict['data']['rootbean']['hostip']
                 role = botmsgdict['data']['role']
                 oprole = botmsgdict['data']['oprole']
                 action = botmsgdict['data']['rootbean']['action']
                 print(host, role, oprole, action)
-                botsendmsgtype10(host,role, oprole, action)
+                botsendmsgtype11(host,role, oprole, action)
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 12:
             print(botmsgdict['data'])
-            host = botmsgdict['data']['msg']
+            #host = botmsgdict['data']['msg']
+            host = botmsgdict['data']['hostip']
             role = botmsgdict['data']['role']
             oprole = botmsgdict['data']['oprole']
             print(host, role, oprole)

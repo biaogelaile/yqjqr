@@ -715,13 +715,17 @@ def companydelete(userid, usertoken,companyname):
         return {'status': 1, 'msg': 'token不可用'}
     company_query = Company.query.filter_by(companyname=companyname).first()
     opusers_query = Opuser.query.filter_by(opcompanyid=company_query.companyid).all()
+    topic_query = Topic.query.filter_by(companyid=company_query.companyid).all()
     for opuser in opusers_query:
-        companys_query = Opuser.query.filter_by(opuserid=opuser. opuserid).all()
+        companys_query = Opuser.query.filter_by(opuserid=opuser.opuserid).all()
         if len(companys_query) == 1:
             user_query = User.query.filter_by(userid=opuser.opuserid).first()
             user_query.role = 1
         db.session.delete(opuser)
     db.session.delete(company_query)
+    for tmp in topic_query:
+        db.session.delete(tmp)
+        db.session.commit()
     db.session.commit()
     db.session.close()
     return {'status': 0, 'msg': '删除成功'}
@@ -736,6 +740,7 @@ def generate_random_str(randomlength=16):
     random_str = ''.join(str_list)
     return random_str
 
+"""
 def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, zabbixusername, zabbixpassword):
     try:
         if usertoken != '11111':
@@ -762,5 +767,73 @@ def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, za
             db.session.add(insert_zabbixserver)
             db.session.commit()
             return {'status': 0, 'msg': '添加成功'}
+    except sqlalchemy.exc.OperationalError:
+        return {'status': 3, 'Oooops': '数据库连接出现错误'}
+"""
+
+def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, zabbixusername, zabbixpassword):
+    try:
+        if usertoken != '11111':
+            return {'status':1, 'msg': 'token不可用'}
+
+        #adminuserinfo_query =Opuser.query.filter_by(opuserid=userid).first()
+        #adminuserrole = adminuserinfo_query.oprole
+        #if adminuserrole != '4':
+            #return {'status': 2, 'msg': '没有权限'}
+
+        zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid).first()
+        if zabbixinfo_query:
+            zabbixinfo_query.zabbixid = zabbixid
+            zabbixinfo_query.zabbixserver = zabbixserver
+            zabbixinfo_query.zabbixusername = zabbixusername
+            zabbixinfo_query.zabbixpassword = zabbixpassword
+
+            data = json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "user.login",
+                    "params": {
+                        "user": zabbixusername,
+                        "password": zabbixpassword
+                    },
+                    "id": 0
+                })
+
+            authrs = requests.post(zabbixserver + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+            if authrs.status_code == 200:
+                db.session.commit()
+                return {'status': 0, 'msg': '修改成功'}
+            else:
+                db.session.close()
+                return {'status':4, 'msg':"zabbix服务器地址配置不正确"}
+
+
+
+        else:
+            data = json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "user.login",
+                    "params": {
+                        "user": zabbixusername,
+                        "password": zabbixpassword
+                    },
+                    "id": 0
+                })
+
+            authrs = requests.post(zabbixserver + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+            if authrs.status_code == 200:
+                zabbixserverid = 'z' + generate_random_str()
+                insert_zabbixserver = Zabbix(companyid=companyid, zabbixid=zabbixserverid,
+                                             zabbixserver=zabbixserver, zabbixuser=zabbixusername,
+                                             zabbixpassword=zabbixpassword)
+                db.session.add(insert_zabbixserver)
+                db.session.commit()
+                return {'status': 0, 'msg': '添加成功'}
+            else:
+                db.session.close()
+                return {'status': 4, 'msg': "zabbix服务器地址配置不正确"}
+
+
     except sqlalchemy.exc.OperationalError:
         return {'status': 3, 'Oooops': '数据库连接出现错误'}

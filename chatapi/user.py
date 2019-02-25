@@ -1,11 +1,13 @@
 from model import *
+from socketIO_client import SocketIO, BaseNamespace
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 import sqlalchemy
 import re
 import random
 import string
 import os
-import datetime
+#import datetime
 import time
 
 from APISender import APISender
@@ -14,6 +16,10 @@ from base.APIConstants import *
 from APITools import *
 from APISubscribe import *
 import sys
+
+serverip = 'http://nginx-server:5001'
+socket = SocketIO('nginx-server',5001)
+
 
 def phonecheck(mobile):
     n = mobile
@@ -130,6 +136,8 @@ def insert_chatbot(companyid):
     except sqlalchemy.exc.OperationalError:
         return {'status': 3, 'Oooops': '数据库连接出现错误'}
 
+
+"""
 def user_info(userid, token, companyid):
     try:
         if token != '11111':
@@ -174,7 +182,77 @@ def user_info(userid, token, companyid):
     #    return {'status': 2, 'msg': '用户名或密码错误'}
     except sqlalchemy.exc.OperationalError:
         return {'status':3, 'Oooops': '数据库连接出现错误'}
+"""
 
+
+def user_info(userid, token, companyid):
+    try:
+        if token != '11111':
+            return {'status': 1, 'msg': 'token 无效'}
+        user_query = User.query.filter_by(userid=userid).first()
+        print(companyid)
+        if companyid:
+            oprole_query = Opuser.query.filter_by(opuserid=userid, opcompanyid=companyid).first()
+            if oprole_query:
+                oprole = oprole_query.oprole
+                opuser_name = oprole_query.opusername
+        else:
+            oprole = None
+            opuser_name = None
+        displaystatus = 1
+        minus = 0
+        user_mobile = user_query.mobile
+        user_profile = user_query.profile
+        user_role = user_query.role
+        user_name = user_query.username
+        if user_role != '1' and user_role != '2':
+            backstage_info = Backstage.query.first()
+            date_inter = backstage_info.companyexpire
+            print("提醒的间隔天数是%s" % date_inter)
+            currenttime = datetime(datetime.today().year, datetime.today().month, datetime.today().day, datetime.today().hour, datetime.today().minute, datetime.today().second)
+            company_query = Company.query.filter_by(companyid=companyid).first()
+            if company_query:
+                user_companyname = company_query.companyname
+                user_companyexpiredate = company_query.companyexpiredate
+                if user_companyexpiredate:
+                    minus0 = user_companyexpiredate - currenttime
+                    minus = minus0.total_seconds()
+                    print("minus$$$$$$$$$$$$$$$$$$$$$$%s"%minus)
+                    if minus > 0 and minus > float(date_inter):
+                        displaystatus = 0
+                    elif minus > 0 and minus < float(date_inter):
+                        displaystatus = 1
+                    elif minus < 0:
+                        pass
+            else:
+                user_companyname=None
+                user_companyexpiredate = None
+            if company_query.companyrole:
+                user_companyrole = company_query.companyrole
+                if minus < 0:
+                    user_companyrole = '1'
+            else:
+                user_companyrole = '1'
+        else:
+            user_companyname = None
+            user_companyexpiredate = None
+            user_companyrole = None
+        db.session.close()
+        a = {'status': 0, 'msg': '查询成功','userid': userid, 'companyname': user_companyname,'opuser_name':opuser_name,
+                    'companyrole':user_companyrole, 'companyexpiredate':user_companyexpiredate,
+                    'companyid':companyid,'username':user_name, 'email': None,'oprole':oprole,
+                    'mobile': user_mobile, 'role':user_role, 'imageUrl':user_profile,"displaystatus":displaystatus}
+        print(a)
+        return {'status': 0, 'msg': '查询成功','userid': userid, 'companyname': user_companyname,'opuser_name':opuser_name,
+                    'companyrole':user_companyrole, 'companyexpiredate':user_companyexpiredate,
+                    'companyid':companyid,'username':user_name, 'email': None,'oprole':oprole,
+                    'mobile': user_mobile, 'role':user_role, 'imageUrl':user_profile,"displaystatus":displaystatus}
+
+
+    #except AttributeError:
+    #    return {'status': 2, 'msg': '用户名或密码错误'}
+    except sqlalchemy.exc.OperationalError:
+        return {'status':3, 'Oooops': '数据库连接出现错误'}
 
 def mobile_insert(smsvc, password, mobile):
     try:
@@ -185,7 +263,7 @@ def mobile_insert(smsvc, password, mobile):
 
         if user_sms_query:
             smsvcode = user_sms_query.user_sms
-            nowtime = datetime.datetime.now()
+            nowtime = datetime.now()
             smscreatetime = user_sms_query.createtime
             if (nowtime - smscreatetime).seconds >= 3600:
                return {'status':7,'msg':'注册失败，验证码已失效'}
@@ -274,7 +352,7 @@ def user_forget_password(smsvc, password, mobile):
         user_sms_query = Sms.query.filter_by(user_mobile=mobile).first()
         if user_sms_query:
             smsvcode = user_sms_query.user_sms
-            nowtime = datetime.datetime.now()
+            nowtime = datetime.now()
             smscreatetime = user_sms_query.createtime
             if (nowtime - smscreatetime).seconds >= 3600:
                return {'status':5,'msg':'注册失败，验证码已失效'}
@@ -373,7 +451,7 @@ def user_update_mobile(smsvc, token, userid, newmobile):
         user_sms_query = Sms.query.filter_by(user_mobile=newmobile).first()
         if user_sms_query:
             smsvcode = user_sms_query.user_sms
-            nowtime = datetime.datetime.now()
+            nowtime = datetime.now()
             smscreatetime = user_sms_query.createtime
             if (nowtime - smscreatetime).seconds >= 3600:
                return {'status':5,'msg':'注册失败，验证码已失效'}
@@ -1796,6 +1874,7 @@ def updatecommandstatus(adminuserid, usertoken, companyid,commandstatus_list):
                     command.commandstatus = status['commandstatus']
         db.session.commit()
         db.session.close()
+
         return {'status':0,'msg':'修改成功'}
 
     except sqlalchemy.exc.OperationalError:

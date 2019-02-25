@@ -210,7 +210,7 @@ class CompanyCommandStatus(db.Model):
     commandstatus = db.Column(db.Boolean, nullable=True, default=0, comment='命令状态')
 
 
-class CommandCheck(db.model):
+class CommandCheck(db.Model):
     #定义表名
     __tablename__ = 'tbl_commandcheck'
     id = db.Column(db.Integer, primary_key=True)

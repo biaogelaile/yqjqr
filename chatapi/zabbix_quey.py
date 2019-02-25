@@ -103,7 +103,8 @@ def query_hosts(userid, usertoken, companyid):
         print(usertoken)
         if usertoken != '11111':
             return {'status':1 ,'msg': 'token不可用'}
-
+        
+        """
         user_youke_check = User.query.filter_by(userid=userid).first()
         if user_youke_check.role == '1' or user_youke_check.role == '2':
             db.session.close()
@@ -158,7 +159,7 @@ def query_hosts(userid, usertoken, companyid):
                     }
                   ]
                 }
-
+        """
         zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid).first()
         if zabbixinfo_query is None:
             db.session.close()
@@ -279,9 +280,11 @@ def zabbixmonitor_add(userid, usertoken, hostinfo_list, companyid):
             return {'status': 1, 'msg': 'token不可用'}
 
         user_youke_check = User.query.filter_by(userid=userid).first()
+        """
         if user_youke_check.role == '1' or user_youke_check.role == '2':
             db.session.close()
             return {'status': 2, 'msg': '游客或者待审核用户无法添加监控主机'}
+        """
         # 生成zabbix token
         user_companyid = companyid
         zabbixinfo_query = Zabbix.query.filter_by(companyid=user_companyid).first()

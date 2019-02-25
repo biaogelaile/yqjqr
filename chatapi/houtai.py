@@ -165,6 +165,19 @@ def backstagecmdelete(token,companyid):
         db.session.close()
         return {'Oooops': 'There is a problem with the database'}
 
+def save_oper_log(username,companyid,exec_com,ip,hostname,exec_time):
+
+    try:
+        operation =OperaLog(username=username,companyid=companyid,exec_com=exec_com,ip=ip,hostname=hostname,exec_time=exec_time)
+        db.session.add(operation)
+        db.session.commit()
+
+        return {'status': 0, 'msg': '操作日志保存成功'}
+
+    except sqlalchemy.exc.OperationalError:
+        db.session.close()
+        return {'Oooops': 'There is a problem with the database'}
+
 def backstageexpiring(userid, token):
     if token != '11111':
         return {'status':1, 'msg':'token不可用'}

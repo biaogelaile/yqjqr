@@ -602,12 +602,14 @@ def getcomplanyallhostvalue():
     try:
         result = dict()
         request_data = request.get_json()
+        print(request_data)
         usertoken = request_data['usertoken']
         companyid = request_data['companyid']
         role = request_data['role']
 
 
     except:
+        print("我错了，dbnszbdnydkysxzjdmx")
         result = {
             "result": [],
             "msg": "parameter error",
@@ -620,6 +622,7 @@ def getcomplanyallhostvalue():
     else:
         #游客，设置和试用中公司项目的角色
         company_role = "2"
+    """
     if role == "0" and companyid != "" and company_role != "1":
         #合法用户
         #with ThreadPoolExecutor(2) as executor:
@@ -635,6 +638,8 @@ def getcomplanyallhostvalue():
                                                 {"free": 91.4891, "key": "disk", "partition": "/boot", "total": 100.0},
                                                 {"available": 20.8195, "key": "memory", "total": 31.4851},
                                                 {"available": 95.9, "key": "network", "total": 100.0}]}], "status": 0}
+    """
+    result = zabbix_quey.zabbix_get_complay_hosts(usertoken,companyid)
     return jsonify(result)
 
 
@@ -764,6 +769,28 @@ def search_operation_log():
     ],
     "status": 0
 }
+    return demjson.encode(result)
+
+
+@app.route('/api/v1/operation/operation_log_save', methods=['POST'])
+def operation_log_save():
+    try:
+        request_data = request.get_json()
+        companyid = request_data['companyid']
+        username = request_data['username']
+        exec_com = request_data['exec_com']
+        ip = request_data['ip']
+        hostname = request_data['hostname']
+        exec_time = request_data['exec_time']
+        print("有人吗，有人吗，有人吗，有人吗，有人吗，有人吗")
+    except:
+        result = {
+            "result": "parameter error",
+            "status": -1
+        }
+        return jsonify(result)
+
+    result = houtai.save_oper_log(username=username,companyid=companyid,exec_com=exec_com,ip=ip,hostname=hostname,exec_time=exec_time)
     return demjson.encode(result)
 
 

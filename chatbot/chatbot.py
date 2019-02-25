@@ -1,6 +1,8 @@
 from socketIO_client import SocketIO, BaseNamespace
-import requests, json
+from datetime import datetime
 import threading
+import requests
+import json
 import time
 import random
 import string
@@ -29,6 +31,7 @@ def generate_random_str(randomlength=16):
 
 loginrs = requests.post(apiurl, data=json.dumps(payload), headers=header)
 print("login...")
+print(loginrs.json())
 token = loginrs.json()['token']
 companyid = loginrs.json()['companyid']
 
@@ -71,7 +74,7 @@ def botsendmsgtype3(host):
     msgid = generate_random_str(48)
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=' + companyid, headers=header)
     if getinfo.status_code != 200:
-        pass
+        print("你们先过了我这一关！！！！！")
     else:
         print('hhhhhhhhhhh', getinfo.json())
         if 'status' in getinfo.json():
@@ -102,6 +105,21 @@ def botsendmsgtype3(host):
                 ]}}}
 
         socket.emit('chatbot', sendmsgtype3)
+        exec_com = "cpu"
+        ip = host
+        hostname = host
+
+        exec_time = datetime(datetime.today().year, datetime.today().month, datetime.today().day, datetime.today().hour,
+                             datetime.today().minute, datetime.today().second)
+        addoperation_payload = {"username": "ccscscscsc", "companyid": companyid, "exec_com": exec_com, "ip": ip,
+                                "hostname": hostname, "exec_time": exec_time}
+        url_s = serverip + '/api/v1/operation/operation_log_save'
+        saveoperation_rs = requests.post(url_s, data=json.dumps(addoperation_payload), headers=header)
+        if saveoperation_rs.status_code == 200:
+            print("超级快速检测数据传输课程上课女你是 vv 说拆掉了没是了看mvclsdvsvmslvmkmdslcslmkmq·1看快看看吃没看是看 v 咖啡11")
+        else:
+            print("Something wrong")
+
         print('ooooooh yes')
 
 def botsendmsgtype4(host):
@@ -298,38 +316,13 @@ def botsendmsgtype1(username):
 
 def botsendmsgtype11(host ,role, oprole, action, commandType):
     msgid = generate_random_str(32)
+    
+    sendmsgtype11 = {'data':"333333333333"}
+    socket.emit('chatbot', sendmsgtype11)
     if role == '8':
         botjoinroot("Oooops, 用户已被禁用Oooops")
-    if oprole == '3' and action == 'request':
-        print("csvcjsdnvjlll看见打草惊蛇擦擦擦卡年级开始就擦撒擦擦女乘客手机内存是得寸进尺你呢你才是打草惊蛇你擦鸡肠鼠肚据说 v 你说呢你是冬季女士 v 是 v；1v 你是 v 难道是 v；是")
-        if commandType == 3:
-            sendmsgtype11 = {'data': {'type':11, 'token': token,'msgid':msgid, 'companyid':companyid,"commnadType":commandType,
-                                  'rootbean':{'msg': '我需要执行 查看主机cpu' + host + '(ip:' + host + ')的命令',
-                                              'hostip':host, 'msgid':msgid}}}
-            socket.emit('chatbot', sendmsgtype11)
-        elif commandType == 4:
-            sendmsgtype11 = {'data': {'type':11, 'token': token,'msgid':msgid, 'companyid':companyid,"commnadType":commandType,
-                                  'rootbean':{'msg': '我需要执行 查看主机内存' + host + '(ip:' + host + ')的命令',
-                                              'hostip':host, 'msgid':msgid}}}
-            socket.emit('chatbot', sendmsgtype11)
-        elif commandType == 6:
-            sendmsgtype11 = {'data': {'type': 11, 'token': token, 'msgid': msgid, 'companyid': companyid,"commnadType":commandType,
-                                      'rootbean': {'msg': '我需要执行 查看磁盘状态' + host + '(ip:' + host + ')的命令',
-                                                   'hostip': host, 'msgid': msgid}}}
-            socket.emit('chatbot', sendmsgtype11)
-        elif commandType == 8:
-            sendmsgtype11 = {'data': {'type': 11, 'token': token, 'msgid': msgid, 'companyid': companyid,"commnadType":commandType,
-                                      'rootbean': {'msg': '我需要执行 查看网络流量' + host + '(ip:' + host + ')的命令',
-                                                   'hostip': host, 'msgid': msgid}}}
-            socket.emit('chatbot', sendmsgtype11)
-        elif commandType == 10:
-            sendmsgtype11 = {'data': {'type': 11, 'token': token, 'msgid': msgid, 'companyid': companyid,"commnadType":commandType,
-                                      'rootbean': {'msg': '我需要执行 重启主机' + host + '(ip:' + host + ')的命令',
-                                                   'hostip': host, 'msgid': msgid}}}
-            socket.emit('chatbot', sendmsgtype11)
 
-
-    elif oprole == '4' or oprole == '6':
+    elif oprole == '4' or oprole == '6' or oprole == '3':
         if action == 'agree' or action == 'request':
             if commandType == 10:
                 print('重启执行中...')
@@ -356,29 +349,33 @@ def botsendmsgtype11(host ,role, oprole, action, commandType):
                     else:
                         sendmsg(host + " 重启失败!, " + rebootrs_dict['result'])
             elif commandType == 3:
+
+                sendmsgtype11 = {'data':"444444444444444444"}
+                socket.emit('chatbot', sendmsgtype11)
                 print('查看主机cpu执行中...')
-                print(botmsgdict['data'])
-                host = botmsgdict['data']['hostip']
+                # print(botmsgdict['data'])
+                # host = botmsgdict['data']['rootbean']['hostip']
                 print(host)
                 botsendmsgtype3(host)
+                print('主机cpu执行完成')
             elif commandType == 4:
-                print('查看主机cpu执行中...')
-                print(botmsgdict['data'])
-                host = botmsgdict['data']['hostip']
+                print('查看主机内存执行中...')
+                # print(botmsgdict['data'])
+                # host = botmsgdict['data']['rootbean']['hostip']
                 print(host)
                 botsendmsgtype4(host)
             elif commandType == 6:
-                print('查看主机cpu执行中...')
-                print(botmsgdict['data'])
-                host = botmsgdict['data']['hostip']
+                print('查看主机磁盘状态执行中...')
+                #print(botmsgdict['data'])
+                #host = botmsgdict['data']['rootbean']['hostip']
                 print(host)
-                botsendmsgtype3(host)
+                botsendmsgtype6(host)
             elif commandType == 8:
-                print('查看主机cpu执行中...')
-                print(botmsgdict['data'])
-                host = botmsgdict['data']['hostip']
+                print('查看主机网络流量执行中...')
+                #print(botmsgdict['data'])
+                #host = botmsgdict['data']['rootbean']['hostip']
                 print(host)
-                botsendmsgtype3(host)
+                botsendmsgtype8(host)
 
         else:
             print('已拒绝...')
@@ -457,12 +454,17 @@ def chatbot_response(*args):
         print(botmsgdict)
         username = botmsgdict['data']['username']
 
+        sendmsgtype11 = {'data':"1111111111111"}
+        socket.emit('chatbot', sendmsgtype11)
+
         if botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 1:
             botsendmsgtype1(username)
             print('lalalalalalalalal')
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 2:
             botsendmsgtype2(username)
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 10:
+                sendmsgtype11 = {'data':"2222222222222"}
+                socket.emit('chatbot', sendmsgtype11)
                 print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
                 print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
                 print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
@@ -470,13 +472,37 @@ def chatbot_response(*args):
                 print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
                 print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
                 print("哈哈哈哈哈哈哈呦呦呦呦哟呦呦啦啦啦啊啦啊啦啦啦啦啦")
-                host = botmsgdict['data']['rootbean']['msg']
+                host = botmsgdict['data']['rootbean']['hostip']
                 role = botmsgdict['data']['role']
                 oprole = botmsgdict['data']['oprole']
                 action = botmsgdict['data']['rootbean']['action']
                 commandType = botmsgdict['data']['commandType']
                 print(host, role, oprole, action,commandType)
                 botsendmsgtype11(host,role, oprole, action,commandType)
+
+                #保存操作记录
+                if commandType == 3:
+                    exec_com = "cpu"
+                elif commandType == 4:
+                    exec_com = "memory"
+                elif commandType == 6:
+                    exec_com = "iostat -d |egrep -v '$^|Linux' |awk '{print $1,$3,$4}'"
+                elif commandType == 8:
+                    exec_com = "network"
+                elif commandType == 10:
+                    exec_com = "reboot"
+                ip = host
+                hostname = host
+                exec_time = datetime(datetime.today().year, datetime.today().month, datetime.today().day,datetime.today().hour,datetime.today().minute,datetime.today().second)
+                print(exec_time)
+                addoperation_payload = {"username":username,"companyid":companyid,"exec_com":exec_com,"ip":ip,"hostname":hostname,"exec_time":exec_time}
+                print("我正在保存日志@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+                url_s = serverip + '/api/v1/login'
+                saveoperation_rs = requests.post(url=url_s, data=json.dumps(addoperation_payload), headers=header)
+                if saveoperation_rs.status_code == 200:
+                    print("我正在保存日志@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+                else:
+                    print("Something wrong@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     except:
         print("Ooops, somethings waring")

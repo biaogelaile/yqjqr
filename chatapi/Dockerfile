@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install curl -y
 RUN pip3 install  -i https://pypi.douban.com/simple flask_socketio flask flask_sqlalchemy sqlalchemy pymysql requests 
 RUN pip3 install  -i https://pypi.douban.com/simple uwsgi
 RUN pip3 install  -i https://pypi.douban.com/simple demjson
+RUN pip3 install  -i https://pypi.douban.com/simple socketIO-client requests
 ADD . /data
 #CMD ["python3", "http_chat.py"]
 RUN python3 setup.py sdist

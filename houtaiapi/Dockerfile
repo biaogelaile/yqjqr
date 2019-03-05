@@ -6,7 +6,7 @@ WORKDIR /data
 #RUN apk update && apk add gcc libc-dev pcre pcre-dev libffi-dev openssl-dev 
 RUN apt-get update && apt-get install curl -y
 RUN pip3 install  -i https://pypi.douban.com/simple flask_socketio flask flask_sqlalchemy sqlalchemy pymysql requests 
-RUN pip3 install  -i https://pypi.douban.com/simple uwsgi
+RUN pip3 install  -i https://pypi.douban.com/simple uwsgi socketIO-client
 RUN pip3 install  -i https://pypi.douban.com/simple flask_cors 
 ADD . /data
 #CMD ["python3", "http_chat.py"]

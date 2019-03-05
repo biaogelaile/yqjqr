@@ -19,19 +19,23 @@ print(token)
 companyid = None
 print(companyid)
 
+#机器人登录
 def botjoinroot(message):
     sendmsg = {'token': token,'role':'chatbot', 'companyid':companyid, 'msg': message}
     socket.emit('talk', sendmsg)
 
 
+#连接响应
 def conn_response(*args):
     print(args[0])
 
-
+#谈论响应
 def talk_response(*args):
     print('talk zzzzzzzzzzz')
     print(args[0])
 
+
+#机器人响应命令类型
 def botsendmsgtype2(username):
     sendmsgtype2 = {'data': {'type': 2,'companyid':companyid, 'token': token, 'rootbean':
             {'msg': '你好，'+ username + ' 需要我帮你做点什么？', 'actions':
@@ -45,7 +49,7 @@ def botsendmsgtype2(username):
     print('ooooooh yes')
 
 
-
+#发送查询cpu信息
 def botsendmsgtype3(host):
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=cHTqfKpMkfZaD1AuNWxJVVXDx', headers=header)
     if getinfo.status_code != 200:
@@ -81,6 +85,7 @@ def botsendmsgtype3(host):
         socket.emit('chatbot', sendmsgtype3)
         print('ooooooh yes')
 
+#发送查询内存消息
 def botsendmsgtype4(host):
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=cHTqfKpMkfZaD1AuNWxJVVXDx', headers=header)
     print('hhhhhhhhhhh', getinfo.json())
@@ -116,7 +121,7 @@ def botsendmsgtype4(host):
     socket.emit('chatbot', sendmsgtype4)
     print('ooooooh yes')
 
-
+#发送查询网络状况消息
 def botsendmsgtype8(host):
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=cHTqfKpMkfZaD1AuNWxJVVXDx', headers=header)
     print('hhhhhhhhhhh', getinfo.json())
@@ -185,6 +190,7 @@ def botsendmsgtype8(host):
     print('ooooooh yes')
 
 
+#发送查询磁盘状态消息
 def botsendmsgtype6(host):
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=cHTqfKpMkfZaD1AuNWxJVVXDx', headers=header)
     print('hhhhhhhhhhh', getinfo.json())
@@ -260,12 +266,14 @@ def botsendmsgtype6(host):
     socket.emit('chatbot', sendmsgtype6)
     print('ooooooh yes')
 
+#发送打招呼信息
 def botsendmsgtype1(username):
     sendmsgtype1 = {'data': {'type':1, 'token': token,'companyid':companyid, 'rootbean':{'msg': '你好，'+ username}}}
     socket.emit('chatbot', sendmsgtype1)
     print('ooooooh yes')
 
 
+#机器人针对不同命令类型进行响应
 def chatbot_response(*args):
     print('chatbot zzzzzzzzzzz')
     botmsgdict = args[0]
@@ -303,7 +311,7 @@ def chatbot_response(*args):
 
 
 
-
+#监控chatbotstatus
 def chatbots():
     while True:
         socket.on('chatbotstatus', chatbot_response)
@@ -314,6 +322,7 @@ tada = threading.Thread(target=chatbots)
 tada.start()
 
 
+#监控constatus
 def conn():
     socket.emit('conn', 'test')
     botjoinroot('join room')

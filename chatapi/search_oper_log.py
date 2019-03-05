@@ -192,13 +192,14 @@ def operation_search_with_condition(usertoken, companyid, search_command_id=None
         #根据用户userid
         if search_user_id != "":
 
-            result_user = User.query.filter_by(userid=search_user_id).limit(1).all()
+            result_user = Opuser.query.filter_by(opuserid=search_user_id).limit(1).all()
+            #result_user = Opuser.query.filter_by(opuserid=search_user_id).first()
             if len(result_user) == 0:
                 result["msg"] = "can't find user info."
                 result["status"] = 1
                 return result
             else:
-                username = str(result_user[0].username)
+                username = str(result_user[0].opusername)
                 sql = """select b.id,b.username,b.companyid, b.exec_com, b.ip, b.hostname, b.exec_time from tbl_operalog b
             where username='{u}' order by b.id desc """.format(u=username)
                 #all_company_result = OperaLog.query.filter(companyid=companyid).filter(username=username).order_by(desc(OperaLog.id)).all()
@@ -223,14 +224,14 @@ def operation_search_with_condition(usertoken, companyid, search_command_id=None
             all_company_result = db.session.execute(sql).fetchall()
         else:
             result["result"] = []
-            result["msg"] = "未查找到符合条件的操作日志."
+            result["msg"] = "未查找到符合条件的操作日志"
             result["status"] = 1
 
 
         if len(all_company_result) == 0:
             # 查询为空
             result["result"] = []
-            result["msg"] = "未查找到符合条件的操作日志."
+            result["msg"] = "未查找到符合条件的操作日志"
             result["status"] = 1
             return result
         for item in all_company_result:

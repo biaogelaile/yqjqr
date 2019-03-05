@@ -197,7 +197,7 @@ def query_hosts(userid, usertoken, companyid):
         for checkhost_dict in hosts_list:
 
             checkhostid = checkhost_dict['hostid']
-            checkhost_query = Monitor.query.filter_by(zabbixhostid=checkhostid).first()
+            checkhost_query = Monitor.query.filter_by(zabbixhostid=checkhostid,companyid=companyid).first()
             if checkhost_query:
                 checkhost_dict['hoststatus'] = 'in'
             else:
@@ -205,7 +205,7 @@ def query_hosts(userid, usertoken, companyid):
             checkhosts_list.append(checkhost_dict)
 
         allhostsnumber = len(checkhosts_list)
-        inhostsnumber_query = Monitor.query.all()
+        inhostsnumber_query = Monitor.query.filter_by(companyid=companyid).all()
         inhostsnumber = len(inhostsnumber_query)
         inhostinfo_list = []
         for inhost in inhostsnumber_query:
@@ -544,8 +544,7 @@ def zabbix_get_complay_hosts(usertoken, companyid):
 
     #获取所属公司所有的监控信息
     try:
-        zabbixinfo_querys = Monitor.query.filter_by(companyid=user_companyid).all()
-        
+        zabbixinfo_querys = Monitor.query.filter_by(companyid=user_companyid).all() 
         print(len(zabbixinfo_querys))
         #获取所属公司的zabbix服务器信息
         zabbixitems_list = []
@@ -617,6 +616,7 @@ def zabbix_get_complay_hosts(usertoken, companyid):
                             
                             temp_dict["key"] = "network"
                             temp_dict["available"] = float(item["lastvalue"])/1024
+                            temp_dict["available"] = float(100)-float(item["lastvalue"]) / 1024
                             temp_dict["total"] = float(100)
                             
                             temp_liebiao.append(temp_dict)
@@ -625,6 +625,7 @@ def zabbix_get_complay_hosts(usertoken, companyid):
                         elif item["key_"].find("net.if.in[Intel(R) PRO/1000 MT Network Connection]") != -1:
                             temp_dict["key"] = "network"
                             temp_dict["available"] = float(item["lastvalue"]) / 1024
+                            temp_dict["available"] = float(100) - float(item["lastvalue"]) / 1024
                             temp_dict["total"] = float(100)
 
                             temp_liebiao.append(temp_dict)

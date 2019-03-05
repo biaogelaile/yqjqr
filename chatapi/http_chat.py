@@ -36,6 +36,7 @@ def UserInfoGet():
     userinfo = user_info(userid, usertoken, companyid)
     return jsonify(userinfo)
 
+#获取游客信息
 @app.route('/api/v1/youke', methods=['GET'])
 def YoukeInfoGet():
     token = request.args.get('token')
@@ -132,6 +133,7 @@ def UserLogin():
     loginrs = user_login(mobile, password)
     return jsonify(loginrs)
 
+#查询所有公司信息
 @app.route('/api/v1/companys', methods=['GET'])
 def CompanysGet():
     token = request.args.get('token')
@@ -139,7 +141,7 @@ def CompanysGet():
     companyrs = company_query(None, usertoken)
     return jsonify(companyrs)
 
-
+#查询某个公司信息
 @app.route('/api/v1/company/<string:companyname>', methods=['GET'])
 def CompanyGet(companyname):
     token = request.args.get('token')
@@ -147,7 +149,7 @@ def CompanyGet(companyname):
     companyrs = company_query(companyname, usertoken)
     return jsonify(companyrs)
 
-
+#创建公司
 @app.route('/api/v1/company', methods=['POST'])
 def CompanyAdd():
     request_data = request.get_json()
@@ -160,6 +162,7 @@ def CompanyAdd():
     companyrs = company_insert(email, username, companyname, userid, usertoken)
     return jsonify(companyrs)
 
+#修改公司信息
 @app.route('/api/v1/company', methods=['PATCH', 'PUT'])
 def UpdateOpUserDefaultCompany():
     request_data = request.get_json()
@@ -170,7 +173,7 @@ def UpdateOpUserDefaultCompany():
     joininfors = updateopuserdefaultcompany(usertoken, userid, companyid)
     return jsonify(joininfors)
 
-
+#创建公司成员
 @app.route('/api/v1/member', methods=['POST'])
 def MemberAdd():
     request_data = request.get_json()
@@ -183,7 +186,7 @@ def MemberAdd():
     memberrs = join_company(userid, companyname, username, usertoken)
     return jsonify(memberrs)
 
-
+#删除公司成员
 @app.route('/api/v1/member', methods=['DELETE'])
 def MemberDel():
     token = request.args.get('token')
@@ -193,7 +196,7 @@ def MemberDel():
     memberrs = leave_company(usertoken, userid, companyid)
     return jsonify(memberrs)
 
-
+#获取某个公司的申请信息
 @app.route('/api/v1/joininfo', methods=['GET'])
 def JoinInfo():
     token = request.args.get('token')
@@ -203,7 +206,7 @@ def JoinInfo():
     joininfors = join_info(userid, usertoken, companyid)
     return jsonify(joininfors)
 
-
+#获取app侧边栏信息
 @app.route('/api/v1/sidebar', methods=['GET'])
 def SidebarInfo():
     token = request.args.get('token')
@@ -212,6 +215,7 @@ def SidebarInfo():
     joininfors = sidebar_get(userid, usertoken)
     return jsonify(joininfors)
 
+#申请加入某个公司
 @app.route('/api/v1/joininfo', methods=['POST'])
 def JoinUpdate():
     request_data = request.get_json()
@@ -224,6 +228,7 @@ def JoinUpdate():
     joininfors = join_update(userid, usertoken,request_userid, admin_action, request_companyid)
     return jsonify(joininfors)
 
+#获取某个公司的成员信息
 @app.route('/api/v1/opusers', methods=['GET'])
 def OpUsers():
     token = request.args.get('token')
@@ -233,7 +238,7 @@ def OpUsers():
     joininfors = opusers(userid, usertoken, companyid)
     return jsonify(joininfors)
 
-
+#查询公司某个成员的信息
 @app.route('/api/v1/opuser/<string:username>', methods=['GET'])
 def OpUser(username):
     token = request.args.get('token')
@@ -243,6 +248,7 @@ def OpUser(username):
     joininfors = opuser(userid, usertoken, username, companyid)
     return jsonify(joininfors)
 
+#获取某个公司命令审核情况
 @app.route('/api/v1/commandstatus', methods=['GET'])
 def CommandStatus():
     token = request.args.get('token')
@@ -252,6 +258,7 @@ def CommandStatus():
     joininfors = commandstatus(userid, usertoken, companyid)
     return jsonify(joininfors)
 
+#修改某个公司的命令审核状态
 @app.route('/api/v1/commandstatus', methods=['PATCH', 'PUT'])
 def UpdateCommandStatus():
     request_data = request.get_json()
@@ -353,6 +360,7 @@ def ZabbixHosts():
     joininfors = zabbix_quey.query_hosts(userid, usertoken, companyid)
     return jsonify(joininfors)
 
+#搜索某台主机的信息
 @app.route('/api/v1/host/<string:searchname>', methods=['GET'])
 def ZabbixHost(searchname):
     token = request.args.get('token')
@@ -407,6 +415,7 @@ def BackstageIndex():
     joininfors = houtai.backstage(userid, usertoken)
     return jsonify(joininfors)
 
+#在web前端页面显示所有公司信息
 @app.route('/backstage/companymanages', methods=['GET'])
 def BackstageCm():
     token = request.args.get('token')
@@ -415,6 +424,8 @@ def BackstageCm():
     joininfors = houtai.backstagecms(userid, usertoken)
     return jsonify(joininfors)
 
+
+#在web前端页面搜索某个公司的信息
 @app.route('/backstage/companymanage/<string:companyname>', methods=['GET'])
 def BackstageSearch(companyname):
     token = request.args.get('token')
@@ -423,6 +434,8 @@ def BackstageSearch(companyname):
     joininfors = houtai.backstagecm(userid, usertoken, companyname)
     return jsonify(joininfors)
 
+
+#在web前端页面显示某个公司的信息
 @app.route('/backstage/companymanage/companyinfo', methods=['GET'])
 def BackstageSearch1():
     companyid = request.args.get("companyid")
@@ -432,6 +445,8 @@ def BackstageSearch1():
     joininfors = backstagecm1(userid, usertoken, companyid)
     return jsonify(joininfors)
 
+
+#在前端页面展示某个公司的成员情况
 @app.route('/backstage/companymanage/opusersinfo', methods=['GET'])
 def Opusersinfo():
     companyid = request.args.get("companyid")
@@ -441,6 +456,8 @@ def Opusersinfo():
     joininfors = opusersinfo(userid, usertoken, companyid)
     return jsonify(joininfors)
 
+
+#获取某台主机的信息
 @app.route('/api/v1/hostinfo', methods=['GET'])
 def Hostinfo():
     hostip = request.args.get("hostip")
@@ -450,6 +467,8 @@ def Hostinfo():
     joininfors = hostinfo(userid, usertoken, hostip)
     return jsonify(joininfors)
 
+
+#获取处于试用期中的公司
 @app.route('/backstage/tryouts', methods=['GET'])
 def BackstageTryOut():
     token = request.args.get('token')
@@ -458,6 +477,8 @@ def BackstageTryOut():
     joininfors = houtai.backstagetryouts(userid, usertoken)
     return jsonify(joininfors)
 
+
+#获取即将过期的公司
 @app.route('/backstage/expiringcompanys', methods=['GET'])
 def BackstageExpireC():
     token = request.args.get('token')
@@ -467,6 +488,7 @@ def BackstageExpireC():
     return jsonify(joininfors)
 
 
+#获取已经过期的公司
 @app.route('/backstage/expiredcompanys', methods=['GET'])
 def BackstageExpired():
     token = request.args.get('token')
@@ -475,6 +497,7 @@ def BackstageExpired():
     joininfors = houtai.backstageexpired(userid, usertoken)
     return jsonify(joininfors)
 
+#获取所有用户信息
 @app.route('/backstage/users', methods=['GET'])
 def BackstageUsers():
     token = request.args.get('token')
@@ -484,6 +507,7 @@ def BackstageUsers():
     return jsonify(joininfors)
 
 
+#禁用某个用户
 @app.route('/backstage/disableduser', methods=['POST'])
 def DisabledUser():
     
@@ -498,6 +522,7 @@ def DisabledUser():
     joininfors = houtai.disabledUser(userid, usertoken, disabled)
     return jsonify(joininfors)
 
+#禁用某家公司
 @app.route('/backstage/disabledcompany', methods=['POST'])
 def DisabledCompany():
 
@@ -512,6 +537,8 @@ def DisabledCompany():
     joininfors = houtai.disabledCompany(companyid, usertoken, disabled)
     return jsonify(joininfors)
 
+
+#获取后台配置信息
 @app.route('/backstage/configs', methods=['GET'])
 def BackstageConfigsGet():
     token = request.args.get('token')
@@ -520,6 +547,7 @@ def BackstageConfigsGet():
     joininfors = houtai.configsGet(userid, usertoken)
     return jsonify(joininfors)
 
+#更改后台配置信息
 @app.route('/backstage/configs', methods=['POST'])
 def BackstageConfigsChange():
     request_data = request.get_json()
@@ -541,6 +569,7 @@ def BackstageConfigsChange():
     joininfors = houtai.configsChange(userid, usertoken, customerservice, expire, trydate)
     return jsonify(joininfors)
 
+#以分页的形式展示所有用户
 @app.route('/backstage/pageusers', methods=['GET'])
 def PageUsers():
     token = request.args.get('token')
@@ -550,6 +579,7 @@ def PageUsers():
     joininfors = houtai.pageUsers(usertoken, page)
     return jsonify(joininfors)
 
+#以分页的形式展示所有公司
 @app.route('/backstage/pagecompanys', methods=['GET'])
 def PageCompanys():
     token = request.args.get('token')
@@ -559,6 +589,7 @@ def PageCompanys():
     joininfors = houtai.pageCompanys(usertoken, page)
     return jsonify(joininfors)
 
+#修改后台账户和密码
 @app.route('/backstage/admin', methods=['POST'])
 def AdminInfo():
 
@@ -568,6 +599,7 @@ def AdminInfo():
     joininfors = houtai.AdminInfo(username, password)
     return jsonify(joininfors)
 
+#创建消息
 @app.route('/api/v1/message', methods=['POST'])
 def MessageAdd():
     request_data = request.get_json()
@@ -580,6 +612,7 @@ def MessageAdd():
     joininfors = usermessage.usermessage_insert(usertoken, userid, companyid, usernewmessage, usermsgid)
     return jsonify(joininfors)
 
+#获取消息
 @app.route('/api/v1/message', methods=['GET'])
 def MessageGet():
     token = request.args.get('token')
@@ -643,7 +676,7 @@ def getcomplanyallhostvalue():
     return jsonify(result)
 
 
-
+#推送消息给安卓手机
 @app.route('/api/v1/msg_push/android', methods=['POST'])
 def push_msg_to_android():
     try:
@@ -670,7 +703,7 @@ def push_msg_to_android():
                                           send_pass_through=send_pass_through)
     return jsonify(result)
 
-
+#推送消息给ios手机
 @app.route('/api/v1/msg_push/ios', methods=['POST'])
 def push_msg_to_ios():
     try:
@@ -696,7 +729,7 @@ def push_msg_to_ios():
                                       send_value=send_value)
     return result
 
-
+#执行salt命令
 @app.route('/api/v1/salt/command', methods=['POST'])
 def exec_command():
     try:
@@ -719,7 +752,7 @@ def exec_command():
 
     return jsonify(result)
 
-
+#搜索操作日志
 @app.route('/api/v1/operation/operation_log', methods=['POST'])
 def search_operation_log():
     try:
@@ -771,7 +804,7 @@ def search_operation_log():
 }
     return demjson.encode(result)
 
-
+#创建操作日志
 @app.route('/api/v1/operation/operation_log_save', methods=['POST'])
 def operation_log_save():
     try:
@@ -792,6 +825,44 @@ def operation_log_save():
 
     result = houtai.save_oper_log(username=username,companyid=companyid,exec_com=exec_com,ip=ip,hostname=hostname,exec_time=exec_time)
     return demjson.encode(result)
+
+#取消某个公司的申请
+@app.route('/api/v1/companyapplication_cancel', methods=['POST'])
+def cancel_company_application():
+    try:
+        request_data = request.get_json()
+        token = request_data["token"]
+        userid = token.split('-')[0]
+        usertoken = token.split('-')[1]
+        companyid = request_data["companyid"]
+
+    except:
+        result = {
+            "result": "parameter error",
+            "status": -1
+        }
+        return jsonify(result)
+
+    result = cancel_companyapplication(companyid=companyid,usertoken=usertoken,userid=userid)
+    return jsonify(result)
+
+#获取用户禁用/启用状态
+@app.route('/api/v1/userstatus',methods=['GET'])
+def  search_userstaus():
+    try:
+        token = request.args.get('token')
+        userid = token.split('-')[0]
+        usertoken = token.split('-')[1]
+
+    except:
+        result = {
+            "result": "parameter error",
+            "status": -1
+        }
+        return jsonify(result)
+
+    result = userstatus_search(usertoken=usertoken,userid=userid)
+    return jsonify(result)
 
 
 #不带条件查询所有的机器人操作日志
@@ -1082,6 +1153,7 @@ def search_operation_search_condition():
 def search_operation_with_condition():
     try:
         request_data = request.get_json()
+        print(request_data)
         usertoken = request_data['usertoken']
         companyid = request_data['companyid']
         role = request_data['role']
@@ -1184,4 +1256,4 @@ def user_exec_command():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debugTrue, host='0.0.0.0', port=5000)

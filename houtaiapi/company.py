@@ -158,6 +158,7 @@ def backstagecms(userid, token, page):
         adminmobile = adminuser_query.opmobile
         companyemail = company_query.companyemail
         companymark = company_query.companymark
+        expirestring = ""
         if companyexpire:
             if companyexpire <= expire_date and companyexpire >= todays_datetime:
                 expirestring = "即将到期"
@@ -690,7 +691,8 @@ def companypatch(userid, usertoken,oldcompanyname, newcompanyname,companyemail, 
         else:
             companyid_query.companyname = newcompanyname
             companyid_query.companyemail = companyemail
-            if len(companyemail) == 0:
+            #if len(companyemail) == 0:
+            if companyemail is None:
                 return {'status': 4, 'msg': '邮箱输入为空，请重新输入！！！'}
             elif re.match(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$', companyemail) is None:
                 return {'status': 3, 'msg': '您输入的邮箱地址无效，请重新输入！！！'}
@@ -798,8 +800,11 @@ def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, za
                     },
                     "id": 0
                 })
-
-            authrs = requests.post(zabbixserver + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+            try: 
+                authrs = requests.post(zabbixserver + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+            except Exception as e:
+                db.session.close()
+                return {'status':4, 'msg':"zabbix服务器地址配置不正确"}
             if authrs.status_code == 200:
                 db.session.commit()
                 return {'status': 0, 'msg': '修改成功'}

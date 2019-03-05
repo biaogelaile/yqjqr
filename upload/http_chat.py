@@ -32,7 +32,7 @@ def upload_file():
     return jsonify(rs)
 
 
-
+#聊天上传头像
 @app.route('/api/v1/headp', methods=['POST'])
 def upload_head():
     token = request.form.get('token')

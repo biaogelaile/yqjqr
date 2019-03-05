@@ -1,9 +1,13 @@
 from model import *
+from socketIO_client import SocketIO, BaseNamespace
+from flask_socketio import SocketIO,emit
 import sqlalchemy
 from datetime import datetime, timedelta
 import time
 from urllib.parse import unquote
-
+from flask_socketio import join_room, leave_room
+app = Flask(__name__)
+socketio = SocketIO(app)
 
 def backstage(userid, token):
     if token != '11111':
@@ -92,6 +96,12 @@ def userdisable(adminuserid,adminusertoken,userstatus,userid):
         if userstatus:
             user_query.mark = userstatus
         db.session.commit()
+        topic = Topic.query.filter_by(admin_userid=adminuserid).first()
+        companyid = topic.companyid
+        companyname = Company.query.filter_by(companyid=companyid).first()
+        room = companyname
+        join_room(room)
+        socket.emit("talkstatus",{"type":14,"companyid":companyid},room=room)
         return {'status':0, 'msg': '修改成功'}
     except sqlalchemy.exc.OperationalError:
         db.session.close()

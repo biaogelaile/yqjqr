@@ -16,7 +16,7 @@ def BackstageIndex():
     return jsonify(joininfors)
 
 
-#公司相关
+#获取所有公司
 @app.route('/backstage/companymanages', methods=['GET'])
 def BackstageCm():
     token = request.args.get('token')
@@ -29,6 +29,7 @@ def BackstageCm():
     joininfors = backstagecms(userid, usertoken, page)
     return jsonify(joininfors)
 
+#根据公司名获取某家公司的信息
 @app.route('/backstage/companymanage/<string:companyname>', methods=['GET'])
 def BackstageSearch(companyname):
     token = request.args.get('token')
@@ -41,6 +42,7 @@ def BackstageSearch(companyname):
     joininfors = backstagecm(userid, usertoken, companyname, page)
     return jsonify(joininfors)
 
+#根据公司id获取某家公司的信息
 @app.route('/backstage/companymanage/<string:companyid>', methods=['GET'])
 def BackstageSearch1(companyid):
     token = request.args.get('token')
@@ -53,6 +55,7 @@ def BackstageSearch1(companyid):
     joininfors = backstagecm1(userid, usertoken, companyid, page)
     return jsonify(joininfors)
 
+#获取处于试用中的公司
 @app.route('/backstage/tryouts', methods=['GET'])
 def BackstageTryOut():
     token = request.args.get('token')
@@ -65,6 +68,7 @@ def BackstageTryOut():
     joininfors = backstagetryouts(userid, usertoken, page)
     return jsonify(joininfors)
 
+#获取即将过期公司
 @app.route('/backstage/expiringcompanys', methods=['GET'])
 def BackstageExpireC():
     token = request.args.get('token')
@@ -77,7 +81,7 @@ def BackstageExpireC():
     joininfors = backstageexpiring(userid, usertoken, page)
     return jsonify(joininfors)
 
-
+#获取已过期公司
 @app.route('/backstage/expiredcompanys', methods=['GET'])
 def BackstageExpired():
     token = request.args.get('token')
@@ -90,6 +94,7 @@ def BackstageExpired():
     joininfors = backstageexpired(userid, usertoken, page)
     return jsonify(joininfors)
 
+#展示新创建的公司
 @app.route('/backstage/newcompanys', methods=['GET'])
 def BackstageNewCompanys():
     token = request.args.get('token')
@@ -102,7 +107,7 @@ def BackstageNewCompanys():
     joininfors = backstagenewcompanytoday(userid, usertoken, page)
     return jsonify(joininfors)
 
-
+#获取公司成员
 @app.route('/backstage/companymembers', methods=['GET'])
 def BackstageCompanyMember():
     token = request.args.get('token')
@@ -116,6 +121,7 @@ def BackstageCompanyMember():
     searchcompanynamers = companymemberinfo(userid, usertoken, page, companyname)
     return jsonify(searchcompanynamers)
 
+#获取公司所有主机
 @app.route('/backstage/companyhosts', methods=['GET'])
 def BackstageCompanyZabbix():
     token = request.args.get('token')
@@ -129,7 +135,7 @@ def BackstageCompanyZabbix():
     searchcompanynamers = companyhostsinfo(userid, usertoken, page, companyname)
     return jsonify(searchcompanynamers)
 
-
+#修改公司有效期
 @app.route('/backstage/companyexpire', methods=['PATCH'])
 def BackstageCompanyExpire():
     request_data = request.get_json()
@@ -141,6 +147,7 @@ def BackstageCompanyExpire():
     searchcompanynamers = companyexpire(userid, usertoken,companyname, time_chuo)
     return jsonify(searchcompanynamers)
 
+#修改公司相关信息
 @app.route('/backstage/companymanager', methods=['PATCH'])
 def BackstageCompanyPatch():
     request_data = request.get_json()
@@ -156,7 +163,7 @@ def BackstageCompanyPatch():
     searchcompanynamers = companypatch(userid, usertoken,oldcompanyname, newcompanyname,companyemail,mark, disable)
     return jsonify(searchcompanynamers)
 
-
+#删除公司
 @app.route('/backstage/companymanager', methods=['DELETE'])
 def BackstageCompanyDelete():
     token = request.args.get('token')
@@ -182,6 +189,7 @@ def BackstageUsers():
     joininfors = backstageusers(userid, usertoken, page)
     return jsonify(joininfors)
 
+#在后台展示今天加入的用户
 @app.route('/backstage/newusers', methods=['GET'])
 def BackstageNewUsers():
     token = request.args.get('token')
@@ -194,7 +202,7 @@ def BackstageNewUsers():
     joininfors = backstagenewusers(userid, usertoken, page)
     return jsonify(joininfors)
 
-
+#在后台根据公司名或者手机查询用户
 @app.route('/backstage/usersearch', methods=['GET'])
 def BackstageUserSearch():
     token = request.args.get('token')
@@ -227,7 +235,7 @@ def BackstageUserSearch():
         joininfors = backstageusers(userid, usertoken, page)
         return jsonify(joininfors)
 
-
+#在后台展示所有游客用户
 @app.route('/backstage/tourist', methods=['GET'])
 def BackstageTouristUsers():
     token = request.args.get('token')
@@ -240,6 +248,7 @@ def BackstageTouristUsers():
     joininfors = backstagetourist(userid, usertoken, page)
     return jsonify(joininfors)
 
+#在后台展示所有已被禁用的用户
 @app.route('/backstage/userstopped', methods=['GET'])
 def BackstageUserstopped():
     token = request.args.get('token')
@@ -253,7 +262,7 @@ def BackstageUserstopped():
     return jsonify(joininfors)
 
 
-
+#修改用户禁用/启用状态
 @app.route('/backstage/user', methods=['PATCH'])
 def BackstagePatchUsers():
     request_data = request.get_json()
@@ -285,6 +294,7 @@ def BackstageConfigsGet():
     joininfors = configsGet(userid, usertoken)
     return jsonify(joininfors)
 
+#修改后台配置
 @app.route('/backstage/configs', methods=['POST'])
 def BackstageConfigsChange():
     request_data = request.get_json()
@@ -336,6 +346,7 @@ def AdminLogin():
     joininfors = AdminInfo(username, password)
     return jsonify(joininfors)
 
+#修改后台登录消息
 @app.route('/backstage/admin', methods=['PATCH'])
 def AdminPatch():
     request_data = request.get_json()

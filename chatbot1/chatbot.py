@@ -14,10 +14,10 @@ apiurl =  serverip + '/api/v1/login'
 apigetmonitorurl = serverip + '/api/v1/zabbixmonitor'
 #apiurl = 'http://139.196.107.14:5000/api/v1/login'
 #payload = {"password": "ppy6rQ3iAMKNzpDjpqYdP29g1STvoz6t0", "mobile": "c2YDSc5nIO7u0Bxjy7JHj0VOy"}
-payload = {"password": "p36GJtZDNGktIhKNk0ouCyxazqKD0l8Zd", "mobile": "cUjAwVDIbBtd4hKtbYZbLHz7s"}
+payload = {"password": "pphPg79nA6fKwS9GvlyuwhHUH59UIOfXj", "mobile": "cprjyFN5yFo0A6VDVjpRL7Aoa"}
 header = {'Content-Type': 'application/json'}
 
-#产生一个随机字符串
+
 def generate_random_str(randomlength=16):
     """
     生成一个指定长度的随机字符串，其中
@@ -35,30 +35,25 @@ print(loginrs.json())
 token = loginrs.json()['token']
 companyid = loginrs.json()['companyid']
 
-#机器人登录
 def botjoinroot(message):
     msgid = generate_random_str(48)
     sendmsg = {'token': token,'role':'chatbot', 'companyid':companyid, 'msg': message, 'msgid':msgid}
     socket.emit('talk', sendmsg)
 
-#发送消息
 def sendmsg(message):
     msgid = generate_random_str(48)
     sendmsg = {'token': token, 'companyid':companyid, 'msg': message, 'msgid':msgid}
     socket.emit('talk', sendmsg)
 
 
-#连接响应
 def conn_response(*args):
     print(args[0])
 
 
-#talk响应
 def talk_response(*args):
     print('talk zzzzzzzzzzz')
     print(args[0])
 
-#发送消息类型2
 def botsendmsgtype2(username):
     msgid = generate_random_str(48)
     sendmsgtype2 = {'data': {'type': 2,'companyid':companyid,'msgid':msgid, 'token': token, 'rootbean':
@@ -74,7 +69,7 @@ def botsendmsgtype2(username):
     print('ooooooh yes')
 
 
-#发送查询主机cpu消息
+
 def botsendmsgtype3(host):
     msgid = generate_random_str(48)
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=' + companyid, headers=header)
@@ -110,11 +105,23 @@ def botsendmsgtype3(host):
                 ]}}}
 
         socket.emit('chatbot', sendmsgtype3)
+        exec_com = "cpu"
+        ip = host
+        hostname = host
+
+        exec_time = datetime(datetime.today().year, datetime.today().month, datetime.today().day, datetime.today().hour,
+                             datetime.today().minute, datetime.today().second)
+        addoperation_payload = {"username": "ccscscscsc", "companyid": companyid, "exec_com": exec_com, "ip": ip,
+                                "hostname": hostname, "exec_time": exec_time}
+        url_s = serverip + '/api/v1/operation/operation_log_save'
+        saveoperation_rs = requests.post(url_s, data=json.dumps(addoperation_payload), headers=header)
+        if saveoperation_rs.status_code == 200:
+            print("超级快速检测数据传输课程上课女你是 vv 说拆掉了没是了看mvclsdvsvmslvmkmdslcslmkmq·1看快看看吃没看是看 v 咖啡11")
+        else:
+            print("Something wrong")
 
         print('ooooooh yes')
 
-
-#发送查询主机内存消息
 def botsendmsgtype4(host):
     msgid = generate_random_str(48)
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=' + companyid, headers=header)
@@ -153,7 +160,6 @@ def botsendmsgtype4(host):
     print('ooooooh yes')
 
 
-#发送查询主机网络消息
 def botsendmsgtype8(host):
     msgid = generate_random_str(48)
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=' + companyid, headers=header)
@@ -223,7 +229,7 @@ def botsendmsgtype8(host):
     socket.emit('chatbot', sendmsgtype8)
     print('ooooooh yes')
 
-#发送查询主机磁盘状态消息
+
 def botsendmsgtype6(host):
     msgid = generate_random_str(48)
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=' + companyid, headers=header)
@@ -308,8 +314,6 @@ def botsendmsgtype1(username):
     print('ooooooh yes')
 
 
-
-#审核不同类型的消息
 def botsendmsgtype11(host ,role, oprole, action, commandType):
     msgid = generate_random_str(32)
     
@@ -443,7 +447,6 @@ def botsendmsgtype12(host, role, oprole):
     print('ooooooh yes')
 
 
-#机器人响应
 def chatbot_response(*args):
     try:
         print('chatbot zzzzzzzzzzz')
@@ -492,21 +495,18 @@ def chatbot_response(*args):
                 hostname = host
                 exec_time = datetime(datetime.today().year, datetime.today().month, datetime.today().day,datetime.today().hour,datetime.today().minute,datetime.today().second)
                 print(exec_time)
-                exec_time = exec_time.strftime("%Y-%m-%d %H:%M:%S")
                 addoperation_payload = {"username":username,"companyid":companyid,"exec_com":exec_com,"ip":ip,"hostname":hostname,"exec_time":exec_time}
                 print("我正在保存日志@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-                url_s = serverip + '/api/v1/operation/operation_log_save'
+                url_s = serverip + '/api/v1/login'
                 saveoperation_rs = requests.post(url=url_s, data=json.dumps(addoperation_payload), headers=header)
                 if saveoperation_rs.status_code == 200:
                     print("我正在保存日志@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
                 else:
                     print("Something wrong@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
-    except Exception as e:
-        print(e)
+    except:
         print("Ooops, somethings waring")
 
-#监控constatus消息
 def conn():
     socket.emit('conn', 'test')
     botjoinroot('join room')

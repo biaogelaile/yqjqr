@@ -3,6 +3,9 @@ from datetime import datetime
 import time
 import math
 
+
+
+"""
 def backstageusers(adminuserid, token, page):
     if token != '11111':
         return {'status':1, 'msg':'token不可用'}
@@ -34,6 +37,8 @@ def backstageusers(adminuserid, token, page):
                 }
             rs_query_list.append(rs_query_dict)
     userinfo_list = []
+
+
     for userallinfo in rs_query_list:
         userinfo_dict = {}
         queryuserid = userallinfo['userid']
@@ -51,6 +56,8 @@ def backstageusers(adminuserid, token, page):
         userinfo_dict['companynamelist'] = companyname_list
         userinfo_dict['userinfo'] = userallinfo
         userinfo_list.append(userinfo_dict)
+    print(userinfo_list)
+
 
     userallinfo_list = []
     for userinfo in userinfo_list:
@@ -67,6 +74,72 @@ def backstageusers(adminuserid, token, page):
             userallinfo_dict['userallinfo'] = userallinfo
 
         userallinfo_list.append(userallinfo_dict)
+
+
+    print(len(userallinfo_list))
+    print(userallinfo_list)
+    db.session.close()
+    return {"status":0, "msg": "查询成功",'pagetotal':page_total, "userinfo": userallinfo_list}
+"""
+
+def backstageusers(adminuserid, token, page):
+    if token != '11111':
+        return {'status':1, 'msg':'token不可用'}
+
+    #所有用户信息
+    page = int(page)
+    rs_query_list = []
+
+    users_query_page = User.query.filter(User.mobile.like('1%')).order_by(User.createtime.desc()).paginate(page, per_page=20, error_out=False)
+    users_query = users_query_page.items
+    #users_total =  len(users_query) / 15
+    users_query_total = User.query.filter(User.mobile.like('1%')).order_by(User.createtime.desc()).all()
+    users_total =  len(users_query_total) / 15
+    page_total = math.ceil(users_total)
+    for user_query in users_query:
+        userid = user_query.userid
+        username = user_query.username
+        usermobile = user_query.mobile
+        userrole = user_query.role
+        mark = user_query.mark
+        userlogintime = user_query.logintime
+        if userlogintime:
+            userlogintime = int(round(time.mktime(userlogintime.timetuple()) * 1000))
+
+        if username != 'chatbot' or usermobile.find('c') == -1:
+            rs_query_dict = {'username': username, 'mobile': usermobile,
+                'role': userrole,'logintime':userlogintime,'userid':userid,
+                'mark':mark
+                }
+            rs_query_list.append(rs_query_dict)
+            
+    userallinfo_list = []
+
+    for userallinfo in rs_query_list:
+        #userinfo_dict = {}
+        queryuserid = userallinfo['userid']
+        opuserinfos_query = Opuser.query.filter_by(opuserid=queryuserid).all()
+
+        if opuserinfos_query:
+            for opuserinfo in opuserinfos_query:
+                userinfo_dict = {}
+                companyid = opuserinfo.opcompanyid
+                companyinfo = Company.query.filter_by(companyid=companyid).first()
+                if companyinfo:
+                    companyname = companyinfo.companyname
+                    userinfo_dict["companyname"] = companyname
+                    userinfo_dict["userallinfo"] = userallinfo
+                    userallinfo_list.append(userinfo_dict)
+
+        else:
+            userinfo_dict = {}
+            companyname = "未关联公司"
+            userinfo_dict["companyname"] = companyname
+            userinfo_dict["userallinfo"] = userallinfo
+            userallinfo_list.append(userinfo_dict)
+
+
+    print(userallinfo_list)
 
 
     print(len(userallinfo_list))
@@ -106,7 +179,7 @@ def backstagenewusers(adminuserid, token, page):
                 'mark':mark
                 }
             rs_query_list.append(rs_query_dict)
-
+    """
     userinfo_list = []
     for userallinfo in rs_query_list:
         userinfo_dict = {}
@@ -124,7 +197,7 @@ def backstagenewusers(adminuserid, token, page):
         userinfo_dict['companynamelist'] = companyname_list
         userinfo_dict['userinfo'] = userallinfo
         userinfo_list.append(userinfo_dict)
-
+   
     userallinfo_list = []
     for userinfo in userinfo_list:
 
@@ -141,6 +214,31 @@ def backstagenewusers(adminuserid, token, page):
             userallinfo_dict['userallinfo'] = userallinfo
 
         userallinfo_list.append(userallinfo_dict)
+    """
+    userallinfo_list = []
+
+    for userallinfo in rs_query_list:
+        #userinfo_dict = {}
+        queryuserid = userallinfo['userid']
+        opuserinfos_query = Opuser.query.filter_by(opuserid=queryuserid).all()
+
+        if opuserinfos_query:
+            for opuserinfo in opuserinfos_query:
+                userinfo_dict = {}
+                companyid = opuserinfo.opcompanyid
+                companyinfo = Company.query.filter_by(companyid=companyid).first()
+                if companyinfo:
+                    companyname = companyinfo.companyname
+                    userinfo_dict["companyname"] = companyname
+                    userinfo_dict["userallinfo"] = userallinfo
+                    userallinfo_list.append(userinfo_dict)
+
+        else:
+            userinfo_dict = {}
+            companyname = "未关联公司"
+            userinfo_dict["companyname"] = companyname
+            userinfo_dict["userallinfo"] = userallinfo
+            userallinfo_list.append(userinfo_dict)
 
     print(len(userallinfo_list))
     db.session.close()
@@ -157,7 +255,8 @@ def backstagesearchusersmobile(adminuserid, token, page, mobile):
     users_query_page = User.query.filter(User.mobile.like('%' + mobile + '%')).order_by(
         User.createtime.desc()).paginate(page, per_page=20, error_out=False)
     users_query = users_query_page.items
-    users_total =  len(users_query) / 15
+    users_query1 = User.query.filter(User.mobile.like('%' + mobile + '%')).order_by(User.createtime.desc()).all()
+    users_total =  len(users_query1) / 15
     page_total = math.ceil(users_total)
     for user_query in users_query:
         userid = user_query.userid
@@ -174,7 +273,7 @@ def backstagesearchusersmobile(adminuserid, token, page, mobile):
                              'mark':mark
                              }
             rs_query_list.append(rs_query_dict)
-
+    """
     userinfo_list = []
     for userallinfo in rs_query_list:
         userinfo_dict = {}
@@ -209,8 +308,34 @@ def backstagesearchusersmobile(adminuserid, token, page, mobile):
             userallinfo_dict['userallinfo'] = userallinfo
 
         userallinfo_list.append(userallinfo_dict)
+    """
+    userallinfo_list = []
+
+    for userallinfo in rs_query_list:
+        #userinfo_dict = {}
+        queryuserid = userallinfo['userid']
+        opuserinfos_query = Opuser.query.filter_by(opuserid=queryuserid).all()
+
+        if opuserinfos_query:
+            for opuserinfo in opuserinfos_query:
+                userinfo_dict = {}
+                companyid = opuserinfo.opcompanyid
+                companyinfo = Company.query.filter_by(companyid=companyid).first()
+                if companyinfo:
+                    companyname = companyinfo.companyname
+                    userinfo_dict["companyname"] = companyname
+                    userinfo_dict["userallinfo"] = userallinfo
+                    userallinfo_list.append(userinfo_dict)
+
+        else:
+            userinfo_dict = {}
+            companyname = "未关联公司"
+            userinfo_dict["companyname"] = companyname
+            userinfo_dict["userallinfo"] = userallinfo
+            userallinfo_list.append(userinfo_dict)
 
     print(len(userallinfo_list))
+    print(userallinfo_list)
 
     db.session.close()
     return {"status":0, "msg": "查询成功",'pagetotal':page_total, "userinfo": userallinfo_list}

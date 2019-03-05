@@ -28,6 +28,7 @@ apiserver = 'http://chatapi:5000'
 #apiserver = 'http://139.196.107.14:5000'
 header = {'Content-Type': 'application/json'}
 
+#生成一个随机字符串
 def generate_random_str(randomlength=16):
     """
     生成一个指定长度的随机字符串，其中
@@ -38,11 +39,13 @@ def generate_random_str(randomlength=16):
     random_str = ''.join(str_list)
     return random_str
 
+#监控conn
 @socketio.on('conn')
 def on_connect(msg):
     print('msg is :', msg)
     emit('connstatus', {'data': 'Connected'})
 
+#监控talk
 @socketio.on('talk')
 def talk_connect(msg):
     print(msg)
@@ -107,6 +110,8 @@ def talk_connect(msg):
         emit('talkstatus', response, room=room)
 
 
+
+#监控机器人
 @socketio.on('chatbot')
 def chatbot_connect(msg):
     print('chatbot msg', msg)
@@ -279,7 +284,7 @@ def chatbot_connect(msg):
                     print("Something worang")
         emit('chatbotstatus', msg, room=room)
 
-
+#推送安卓消息
 def push_msg_to_android(userid,usertoken, package_name, title, description, pass_through,payload):
     APP_SecKey = r"lsoNVMUZH69YvcsLR6SHNQ=="
     result_code = 0
@@ -321,7 +326,7 @@ def push_msg_to_android(userid,usertoken, package_name, title, description, pass
 
 
 
-
+#推送ios消息
 def push_msg_to_ios(userid,usertoken, package_name, title, subtitle, body):
     APP_SecKey = r"XWd6+oOcSmliC4jJJsdrcw=="
     result_code = 0

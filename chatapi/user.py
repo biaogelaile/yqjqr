@@ -237,6 +237,7 @@ def user_info(userid, token, companyid):
             user_companyname = None
             user_companyexpiredate = None
             user_companyrole = None
+        db.session.commit()
         db.session.close()
         a = {'status': 0, 'msg': '查询成功','userid': userid, 'companyname': user_companyname,'opuser_name':opuser_name,
                     'companyrole':user_companyrole, 'companyexpiredate':user_companyexpiredate,
@@ -1403,6 +1404,8 @@ def hostinfo(userid, token, hostip):
     db.session.close()
     return {"status": 0, "msg":"查询成功","hostinfo": rs_query_list}
 
+
+"""
 def company_insert(email, username, companyname, userid, token):
     try:
         #2 代表邮箱为空
@@ -1457,6 +1460,67 @@ def company_insert(email, username, companyname, userid, token):
                     'oprole': '4','role': '0'}
     except sqlalchemy.exc.OperationalError:
         return {'Oooops': '数据库连接似乎出了问题'}
+"""
+
+
+def company_insert(email, username, companyname, userid, token):
+    try:
+        #2 代表邮箱为空
+        #3 代表用户名为空
+        #4 代表公司名称为空
+        #5 该公司已经被注册
+
+        print(len(companyname))
+
+        if token != '11111':
+            return {'status': 1, 'msg': 'token不可用'}
+
+        if len(companyname) > 30:
+            return {'status': 6, 'msg': '公司名称不符合长度要求，公司名称应在30字以内'}
+        #elif re.search(r'^([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)$',companyname):
+           #return {'status':'7','msg':'公司名称中不允许包含特殊字符，请重新输入'}
+        elif len(email)== 0:
+            return {'status': 2, 'msg': '请先填写邮箱'}
+        elif re.match(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$',email) is None:
+            return {'status':'7','msg':'请输入有效邮箱地址'}
+        elif len(username) == 0:
+            return {'status': 3, 'msg': '请先填写用户名'}
+        elif len(username) > 12:
+            return {'status': 6, 'msg': '用户名称不符合长度要求，用户名称应在12字以内'}
+        elif len(companyname) ==0:
+            return {'status':4, 'msg':'请先填写公司名称'}
+        verification_company = Company.query.filter_by(companyname=companyname).first()
+
+        if verification_company:
+            db.session.close()
+            return {'status': 5, 'msg': '该公司已被注册'}
+        else:
+            companyid = 'c' + generate_random_str(24)
+            user_query = User.query.filter_by(userid=userid).first()
+            user_query.role = '0'
+            user_mobile = user_query.mobile
+            db.session.commit()
+
+            insert_company = Company(companyid=companyid, companyname=companyname, companyrole='1')
+            insert_opuser = Opuser(opusername=username, opuserid=userid,
+                                   opmobile=user_mobile,opcompanyid=companyid,
+                                   default='true', oprole='4', opemail=email,
+                                   )
+            db.session.add(insert_company)
+            db.session.add(insert_opuser)
+            db.session.commit()
+            chatbotinfo = insert_chatbot(companyid)
+            db.session.close()
+            return {'status': 0, 'msg': '公司创建成功','chatbotinfo':chatbotinfo,
+                    'companyid':companyid,'mobile':user_mobile,
+                    'companyexpiredate':None,
+                    'email': email, 'username': username,
+                    'companyname': companyname,'companyrole':'1',
+                    'oprole': '4','role': '0'}
+    except sqlalchemy.exc.OperationalError:
+        return {'Oooops': '数据库连接似乎出了问题'}
+
+
 
 def join_company(userid, companyid, username , token):
     try:
@@ -1617,7 +1681,9 @@ def join_info(userid, token, companyid):
                     admin_user_dict['request_img'] = request_user_request_imgurl
                     admin_user_list.append(admin_user_dict)
 
-                daoxu_admin_user_list = admin_user_list[::-1]
+                admin_user_list1=sorted(admin_user_list,key=lambda keys:keys["request_createtime"])
+                print(admin_user_list1)
+                daoxu_admin_user_list = admin_user_list1[::-1]
                 db.session.close()
                 return {'status': 0, 'msg': 'success', 'info': daoxu_admin_user_list}
             else:
@@ -1713,7 +1779,7 @@ def sidebar_get(userid, token):
                 else:
                     request_create_time_chuo = None
                 db.session.close()
-                return {'status': 0, 'msg': '查询成功', 'username': opusername,
+                return {'status': 0, 'msg': '查询成功', 'username': query_username,
                         'companyname': opcompanyname, 'companyid': opusercompanyid,
                         'companyrole': opcompanyrole, 'mobile': query_mobile,
                         'oprole':query_oprole,'role': query_role,'companyexpiredate':request_create_time_chuo}
@@ -1733,7 +1799,7 @@ def sidebar_get(userid, token):
                 else:
                     request_create_time_chuo = None
                 db.session.close()
-                return {'status': 0, 'msg': '查询成功', 'username': opusername,
+                return {'status': 0, 'msg': '查询成功', 'username': query_username,
                         'companyname': opcompanyname, 'companyid': opusercompanyid,
                         'companyrole': opcompanyrole, 'mobile': query_mobile,
                         'oprole':query_oprole,'role': query_role, 'companyexpiredate':request_create_time_chuo}
@@ -1771,7 +1837,7 @@ def sidebar_get(userid, token):
 
                 print(companymember_list)
                 db.session.close()
-                return {'status': 0, 'msg': 'success', 'username':opusername,
+                return {'status': 0, 'msg': 'success', 'username':query_username,
                         'companyname':opcompanyname,'companyid':opusercompanyid,
                         'companyrole': opcompanyrole,'mobile':query_mobile,'role':query_role,
                         'oprole':query_oprole,'companyexpiredate':request_create_time_chuo,
@@ -1819,8 +1885,8 @@ def join_update(userid, token, request_userid, admin_action, request_companyid):
             request_username = request_userinfo.username
             request_mobile = request_userinfo.mobile
             request_join_info = Opuser.query.filter_by(opuserid=request_userid, opcompanyid=request_companyid).first()
-
-            request_join_info.oprole = '3'
+            if request_join_info:
+                request_join_info.oprole = '3'
             db.session.commit()
             db.session.close()
             return {'status': 0, 'msg': '已经同意', 'request_username': request_username,
@@ -2366,3 +2432,86 @@ def push_msg_to_ios(userid,usertoken, package_name, title, subtitle, body):
             "status": result_code
         }
         return result
+
+
+"""
+# 取消公司申请
+def cancel_companyapplication(companyid, usertoken, userid):
+    try:
+
+        if usertoken != '11111':
+            return {'status': 1, 'msg': 'Ooooops, token不可用'}
+
+        application = Topic.query.filter_by(companyid=companyid, request_userid=userid).first()
+        application.admin_action = '3'
+        db.session.commit()
+        db.session.close()
+
+        return {'status': 0, 'msg': '取消公司申请成功'}
+
+    except sqlalchemy.exc.OperationError:
+
+        db.session.close()
+        return {'Oooops': 'There is a problem with the database'}
+"""
+
+# 取消公司申请
+def cancel_companyapplication(companyid, usertoken, userid):
+    try:
+
+        if usertoken != '11111':
+            return {'status': 1, 'msg': 'Ooooops, token不可用'}
+
+        opusers = Opuser.query.filter_by(opuserid=userid).all()
+
+        if opusers:
+            for opuser in opusers:
+                if opuser.opcompanyid != companyid:
+                    user = User.query.filter_by(userid=userid).first()
+                    user.role = '0'
+                    application = Topic.query.filter_by(companyid=companyid, request_userid=userid).first()
+                    if application:
+
+                        application.admin_action = '1'
+
+                    myopuser = Opuser.query.filter_by(opuserid=userid,opcompanyid=companyid).delete()
+
+                    db.session.commit()
+                    db.session.close()
+                     
+                    result = {'status': 0, 'msg': '取消公司申请成功'}
+                    return result
+
+                else:
+                    user = User.query.filter_by(userid=userid).first()
+                    user.role = '1'
+                    application = Topic.query.filter_by(companyid=companyid, request_userid=userid).first()
+ 
+                    if application:
+                        application.admin_action = '1'
+                    myopuser = Opuser.query.filter_by(opuserid=userid, opcompanyid=companyid).delete()
+                    db.session.commit()
+                    db.session.close()
+
+                    result= {'status': 0, 'msg': '取消公司申请成功'}
+                    return result
+
+    except sqlalchemy.exc.OperationError:
+
+        db.session.close()
+        return {'Oooops': 'There is a problem with the database'}
+
+
+#搜索用户状态
+def userstatus_search(usertoken, userid):
+    try:
+
+        user = User.query.filter_by(userid=userid).first()
+        usermark = user.mark
+
+        return {'status': 0, "msg": "获取用户状态成功", "usermark": usermark}
+
+    except sqlalchemy.exc.OperationError:
+
+        db.session.close()
+        return {'Oooops': 'There is a problem with the database'}

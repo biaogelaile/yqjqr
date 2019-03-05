@@ -131,9 +131,6 @@ def chatbot_connect(msg):
         companyid = None
     #company_info_rs = requests.get(apiserver + '/backstage/companymanage/companyinfo?token=' + token + '&companyid=' + companyid,headers=header)
     #print(company_info_rs.json())
-    print("jdasjcjaj大神教大家讲解啊就擦家具擦")
-    print("jdasjcjaj大神教大家讲解啊就擦家具擦")
-    print("jdasjcjaj大神教大家讲解啊就擦家具擦")
 
     if 'msgid' in msg['data']:
         msgid = msg['data']['msgid']
@@ -151,9 +148,6 @@ def chatbot_connect(msg):
     else:
         user_profile_rs = requests.get(apiserver + '/api/v1/youke?token=' + token,headers=header)
     print(user_profile_rs.json())
-    print("sajjajjsajdjjasdjajjdjajdadcjasjca")
-    print("sajjajjsajdjjasdjajjdjajdadcjasjca")
-    print("sajjajjsajdjjasdjajjdjajdadcjasjca")
     print(user_profile_rs.json())
     if 'role' in user_profile_rs.json():
         role = user_profile_rs.json()['role']
@@ -163,31 +157,15 @@ def chatbot_connect(msg):
     print(role)
    
     if chatbottype == 11:
-        print("我进来了擦拭内裤擦上擦出那就是今年擦上擦拿手菜·那就从女神经超难吃·那就看出那是擦擦·你擦上南昌那场·")
         if companyid:
-            #company_info_rs = requests.get(apiserver + '/backstage/companymanage/companyinfo?token=' + token + '&companyid=' + companyid,headers=header)
-            # company_info_rs = company_info_rs.json()
-            #print(company_info_rs)
-            #print(company_info_rs)
-            #print(company_info_rs)
-            #print(company_info_rs)
         
             company_info_rs = requests.get(apiserver + '/backstage/companymanage/opusersinfo?token=' + token + '&companyid=' + companyid,headers=header)
             company_info_rs = company_info_rs.json()
-            print("哈哈哈哈哈哈哈哈哈哈")
-            print("哈哈哈哈哈哈哈哈哈哈")
-            print("哈哈哈哈哈哈哈哈哈哈")
-            print("哈哈哈哈哈哈哈哈哈哈")
             print(company_info_rs)
-            print("hi 啊 hi 啊 hi 啊 hi 啊 hi 啊")
-            print("hi 啊 hi 啊 hi 啊 hi 啊 hi 啊")
-            print("hi 啊 hi 啊 hi 啊 hi 啊 hi 啊")
-            print("hi 啊 hi 啊 hi 啊 hi 啊 hi 啊")
             applyopusername = user_profile_rs.json()['opuser_name']
             host = msg["data"]["rootbean"]["hostip"]
             msg1 = "%s申请重启服务器%s"%(applyopusername,host)
             print(msg1*10)
-            #msg = "顽童申请重启服务器10.0.60.175"
             #这个地方还要加上审核员
             for temp in company_info_rs["opuserinfo"]:
                 result1 = push_msg_to_android(temp["opuserid"], token, 'com.domain.operationrobot', '消息通知', msg1, 0, 'payload')

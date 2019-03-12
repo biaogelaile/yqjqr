@@ -14,7 +14,7 @@ apiurl =  serverip + '/api/v1/login'
 apigetmonitorurl = serverip + '/api/v1/zabbixmonitor'
 #apiurl = 'http://139.196.107.14:5000/api/v1/login'
 #payload = {"password": "ppy6rQ3iAMKNzpDjpqYdP29g1STvoz6t0", "mobile": "c2YDSc5nIO7u0Bxjy7JHj0VOy"}
-payload = {"password": "p36GJtZDNGktIhKNk0ouCyxazqKD0l8Zd", "mobile": "cUjAwVDIbBtd4hKtbYZbLHz7s"}
+payload = {"password": "i8Ts9fJeBa5Q3AU2Ift74g==", "mobile": "cUjAwVDIbBtd4hKtbYZbLHz7s"}
 header = {'Content-Type': 'application/json'}
 
 #产生一个随机字符串
@@ -84,9 +84,12 @@ def botsendmsgtype3(host):
         print('hhhhhhhhhhh', getinfo.json())
         if 'status' in getinfo.json():
             print('不存在host', host)
+            #sendmsgtype3 = {
+               # 'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   # {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
             sendmsgtype3 = {
-                'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
-                    {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
 
         else:
             lastvalue_str = getinfo.json()['cpu'][0]['lastvalue']
@@ -121,9 +124,14 @@ def botsendmsgtype4(host):
     print('hhhhhhhhhhh', getinfo.json())
     if 'status' in getinfo.json():
         print('不存在host', host)
+        """
         sendmsgtype4 = {
             'data': {'type': 1, 'token': token, 'msgid':msgid,'companyid': companyid, 'rootbean':
                 {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
+        """
+        sendmsgtype4 = {
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
     else:
         total_memory_lastvalue = getinfo.json()['total_memory'][0]['lastvalue']
         available_memory_lastvalue = getinfo.json()['available_memory'][0]['lastvalue']
@@ -161,9 +169,8 @@ def botsendmsgtype8(host):
     if 'status' in getinfo.json():
         print('不存在host', host)
         sendmsgtype8 = {
-            'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
-                {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
-
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
     else:
         monitorinfo = getinfo.json()
         hostip = getinfo.json()['hostip']
@@ -232,9 +239,8 @@ def botsendmsgtype6(host):
     if 'status' in getinfo.json():
         print('不存在host', host)
         sendmsgtype6 = {
-            'data': {'type': 1, 'token': token, 'msgid':msgid,'companyid': companyid, 'rootbean':
-                {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
-
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
     else:
         monitorinfo = getinfo.json()
         diskinfo_list = monitorinfo['disk']
@@ -334,11 +340,11 @@ def botsendmsgtype11(host ,role, oprole, action, commandType):
 
                 rebootrs = requests.post(url=rebooturl, data=json.dumps(payload), headers=header)
 
-                rebootrs.status_code = 200
-
                 if rebootrs.status_code == 200:
                     rebootrs_dict_str = rebootrs.json()
+                    print(rebootrs_dict_str)
                     rebootrs_dict = eval(rebootrs_dict_str)
+                    #rebootrs_dict = rebootrs.json()
                     status = rebootrs_dict['status']
                     if status == 0:
                         sendmsg(host + " 重启成功!")
@@ -386,9 +392,8 @@ def botsendmsgtype12(host, role, oprole):
     if 'status' in getinfo.json():
         print('不存在host', host)
         sendmsgtype12 = {
-            'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
-                {'msg': "Ooops，没找到服务器：" + host + "，请重新输入。"}}}
-
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
     else:
         hostip = getinfo.json()['hostip']
         #

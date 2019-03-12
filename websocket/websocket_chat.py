@@ -78,7 +78,7 @@ def talk_connect(msg):
 
     user_role = user_profile_rs.json()['role']
     user_companyrole = user_profile_rs.json()['companyrole']
-    if user_role == '1' or user_role == '2' or user_companyrole == '1':
+    if user_role == '1' or user_role == '2':
         room = generate_random_str(24)
     else:
         room = user_profile_rs.json()['companyname']
@@ -173,7 +173,7 @@ def chatbot_connect(msg):
                 result2 =push_msg_to_ios(temp["opuserid"], token, 'com.domain.operationrobot', '消息通知', msg1, 'body')
                 print(result2)
   
-    if role == '1' or role == '2' or user_companyrole == '1':
+    if role == '1' or role == '2':
         room = 'chatbotyouke11111'
     else:
         room = user_profile_rs.json()['companyname']

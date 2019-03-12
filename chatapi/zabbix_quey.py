@@ -326,6 +326,66 @@ def zabbixmonitor_add(userid, usertoken, hostinfo_list, companyid):
                 db.session.add(insert_zabbixmonitor)
                 db.session.commit()
                 db.session.close()
+        else:
+            pass
+        db.session.commit()
+        db.session.close()
+        return  {'status':0, 'msg': '添加成功'}
+    except sqlalchemy.exc.OperationalError:
+        return {'status':3, 'Oooops': '数据库连接出现错误'}
+
+def zabbixallmonitor_add(userid, usertoken, hostinfo_list, companyid):
+    try:
+        if usertoken != '11111':
+            return {'status': 1, 'msg': 'token不可用'}
+
+        user_youke_check = User.query.filter_by(userid=userid).first()
+        """
+        if user_youke_check.role == '1' or user_youke_check.role == '2':
+            db.session.close()
+            return {'status': 2, 'msg': '游客或者待审核用户无法添加监控主机'}
+        """
+        # 生成zabbix token
+        user_companyid = companyid
+        zabbixinfo_query = Zabbix.query.filter_by(companyid=user_companyid).first()
+        zabbixusername = zabbixinfo_query.zabbixuser
+        zabbixpassword = zabbixinfo_query.zabbixpassword
+        zabbixurl = zabbixinfo_query.zabbixserver
+        zabbixtoken = auth(zabbixusername, zabbixpassword, zabbixurl)
+        zabbixinfoall_query = Monitor.query.filter_by(companyid=user_companyid).first()
+        if zabbixinfoall_query:
+            zabbixinfoall_query.query.filter_by(companyid=user_companyid).delete()
+
+        if hostinfo_list:
+            for hostinfo in hostinfo_list:
+                zabbixhostid = hostinfo['hostid']
+                zabbixhostip = hostinfo['host']
+                zabbixhostname = hostinfo['name']
+
+                data = json.dumps({
+                        "jsonrpc": "2.0",
+                        "method": "item.get",
+                        "params": {
+                            "output": ["itemid", "key_"],
+                            "hostids": zabbixhostid,
+                            },
+                        "auth": zabbixtoken,
+                        "id": 1,
+                        })
+                items_response = requests.post(zabbixurl + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+
+                zabbixitemname_list = ["system.cpu.util[,user]", "vfs.fs.size", "vm.memory.size[available]", "vm.memory.size[total]", "net.if.in", "net.if.out"]
+
+                itemid_list = []
+                for itemid_response_value in items_response.json()['result']:
+                    for zabbixitemname in zabbixitemname_list:
+                        if itemid_response_value['key_'].find(zabbixitemname) != -1:
+                            itemid_list.append(itemid_response_value['itemid'])
+
+                insert_zabbixmonitor = Monitor(companyid=user_companyid, zabbixhostid=zabbixhostid, zabbixhostip=zabbixhostip, save="temp",zabbixhostname=zabbixhostname, zabbixitemname=str(zabbixitemname_list), zabbixitemid=str(itemid_list))
+                db.session.add(insert_zabbixmonitor)
+                db.session.commit()
+                db.session.close()
         db.session.close()
         return  {'status':0, 'msg': '添加成功'}
     except sqlalchemy.exc.OperationalError:
@@ -419,7 +479,23 @@ def zabbixitem_value_query(userid, usertoken, host, companyid):
         zabbixpassword = zabbixinfo_query.zabbixpassword
         zabbixurl = zabbixinfo_query.zabbixserver
         zabbixtoken = auth(zabbixusername, zabbixpassword, zabbixurl)
-
+        
+        """
+        #临时存放全部zabbix服务请
+        token = userid +'-'+ usertoken
+        header = {'Content-Type': 'application/json'}
+        zabbixapiurl = 'http://61.139.64.108:18080/api/v1/hosts?token='+token+'&companyid='+companyid
+        response1 = requests.get(zabbixapiurl,headers=header)
+        result1 = response1.json()
+        hostlistinfo = result1["totalhosts"]
+        zabbixaddurl = 'http://61.139.64.108:18080/api/v1/zabbixallmonitor'
+        payload = {"token":token,"companyid":companyid,"hostinfo":hostlistinfo}
+        response2 = requests.post(zabbixaddurl,data= json.dumps(payload),headers=header)
+        if response2.status_code == 200:
+            pass
+        else:
+            return {"status":"5","msg":"失败了"}
+        """
         zabbixinfo_query_hostid = Monitor.query.filter_by(companyid=user_companyid, zabbixhostid=host).first()
         zabbixinfo_query_hostip = Monitor.query.filter_by(companyid=user_companyid, zabbixhostip=host).first()
         zabbixinfo_query_hostname = Monitor.query.filter_by(companyid=user_companyid, zabbixhostname=host).first()
@@ -501,6 +577,9 @@ def zabbixitem_value_query(userid, usertoken, host, companyid):
         response_queryinfo['out_network'] = net_out_query_list
         response_queryinfo['cpu'] = cpu_query_list
         response_queryinfo['hostip'] = hostinfo
+
+        Monitors = Monitor.query.filter_by(companyid=companyid,save="temp").delete()
+        db.session.commit()
         db.session.close()
         return response_queryinfo
     except sqlalchemy.exc.OperationalError:
@@ -578,7 +657,8 @@ def zabbix_get_complay_hosts(usertoken, companyid):
                     "id": 1,
                 })
             items_response = requests.post(zabbixurl + '/zabbix/api_jsonrpc.php', data=data, headers=headers_base)
-            items_response_info_dict['host'] = zabbixitems['host']
+            #items_response_info_dict['host'] = zabbixitems['host']
+            items_response_info_dict['host'] = zabbixitems['name']
             items_response_info_dict["item"] = demjson.decode(items_response.content)["result"]
             result_temp.append(items_response_info_dict)
 

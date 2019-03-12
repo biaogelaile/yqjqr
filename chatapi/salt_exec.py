@@ -56,25 +56,65 @@ class SaltApi:
         self.login_params = {'username': self.username, 'password': self.password, 'eauth': 'pam'}
         self.token = self.get_data(self.login_url, self.login_params)['token']
         self.headers['X-Auth-Token'] = self.token
+    """
+    def get_data(self, url, params):
+        send_data = json.dumps(params)
+        
+        request = requests.post(url, data=send_data, headers=self.headers, verify=False,timeout=5)
+        try:
+            if request.status_code != 200:
+            # result = {
+            #     "result": "salt服务" + salt_api + "连接失败。 http code： " + str(request.status_code),
+            #     "status": 1
+            # }
+                logger.error("salt服务" + salt_api + "连接失败。 http code： " + str(request.status_code))
+                print("salt服务" + salt_api + "连接失败。 http code： " + str(request.status_code))
+            #return result
+       
+            assert request.status_code == 200
+
+
+            response = request.json()
+            result = dict(response)
+            return result['return'][0]
+        except Exception:
+            response = request.json()
+            result = dict(response)
+            return result['return'][0]
+    """
+
 
     def get_data(self, url, params):
         send_data = json.dumps(params)
-        request = requests.post(url, data=send_data, headers=self.headers, verify=False)
+        try:
+           request = requests.post(url, data=send_data, headers=self.headers, verify=False,timeout=10)
+        except Exception:
+
+            result = {
+                "result": "重启失败",
+                "status": 1
+            }
+
+            return result
         if request.status_code != 200:
             # result = {
             #     "result": "salt服务" + salt_api + "连接失败。 http code： " + str(request.status_code),
             #     "status": 1
             # }
-            logger.error("salt服务" + salt_api + "连接失败。 http code： " + str(request.status_code))
+            #logger.error("salt服务" + salt_api + "连接失败。 http code： " + str(request.status_code))
             print("salt服务" + salt_api + "连接失败。 http code： " + str(request.status_code))
             #return result
-        assert request.status_code == 200
+        try:
+            assert request.status_code == 200
+            response = request.json()
+            result = dict(response)
+            return result['return'][0]
 
+        except Exception:
 
-        response = request.json()
-        result = dict(response)
-        return result['return'][0]
-
+            response = request.json()
+            result = dict(response)
+            return result['return'][0]
     def salt_command(self, tgt, method, arg=None):
         """远程执行命令，相当于salt 'client1' cmd.run 'free -m'"""
         if arg:
@@ -123,6 +163,7 @@ def main(username,  usertoken, clientip, command, companyid, hostname):
         return json.dumps(result)
 
     #执行输入的命令
+   
     try:
         with ThreadPoolExecutor(2) as executor:
             cmd_result = executor.submit(salt.salt_command, salt_client, salt_method, salt_params)

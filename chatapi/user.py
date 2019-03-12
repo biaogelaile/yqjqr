@@ -1,15 +1,17 @@
 from model import *
-from socketIO_client import SocketIO, BaseNamespace
+from flask import Flask,render_template,current_app
+from flask_socketio import SocketIO, emit
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import sqlalchemy
+from sqlalchemy import desc
 import re
 import random
 import string
 import os
 #import datetime
 import time
-
+import hashlib
 from APISender import APISender
 from base.APIMessage import *
 from base.APIConstants import *
@@ -17,8 +19,9 @@ from APITools import *
 from APISubscribe import *
 import sys
 
-serverip = 'http://nginx-server:5001'
-socket = SocketIO('nginx-server',5001)
+Constants.use_official() 
+from flask_socketio import join_room, leave_room
+
 
 
 def phonecheck(mobile):
@@ -113,7 +116,7 @@ def forget_smsvc(mobile):
 
 def insert_chatbot(companyid):
     try:
-        i_username = 'chatbot'
+        i_username = '机器人'
         i_userid = 'c' + generate_random_str(24)
         i_password = 'p' + generate_random_str(32)
         i_mobile = companyid
@@ -191,6 +194,7 @@ def user_info(userid, token, companyid):
             return {'status': 1, 'msg': 'token 无效'}
         user_query = User.query.filter_by(userid=userid).first()
         print(companyid)
+        opuser_name =None
         if companyid:
             oprole_query = Opuser.query.filter_by(opuserid=userid, opcompanyid=companyid).first()
             if oprole_query:
@@ -227,7 +231,8 @@ def user_info(userid, token, companyid):
             else:
                 user_companyname=None
                 user_companyexpiredate = None
-            if company_query.companyrole:
+            company_query = Company.query.filter_by(companyid=companyid).first()
+            if company_query:
                 user_companyrole = company_query.companyrole
                 if minus < 0:
                     user_companyrole = '1'
@@ -249,11 +254,14 @@ def user_info(userid, token, companyid):
                     'companyid':companyid,'username':user_name, 'email': None,'oprole':oprole,
                     'mobile': user_mobile, 'role':user_role, 'imageUrl':user_profile,"displaystatus":displaystatus}
 
-
     #except AttributeError:
     #    return {'status': 2, 'msg': '用户名或密码错误'}
     except sqlalchemy.exc.OperationalError:
         return {'status':3, 'Oooops': '数据库连接出现错误'}
+
+
+
+
 
 def mobile_insert(smsvc, password, mobile):
     try:
@@ -266,7 +274,7 @@ def mobile_insert(smsvc, password, mobile):
             smsvcode = user_sms_query.user_sms
             nowtime = datetime.now()
             smscreatetime = user_sms_query.createtime
-            if (nowtime - smscreatetime).seconds >= 3600:
+            if (nowtime - smscreatetime).seconds >= 360:
                return {'status':7,'msg':'注册失败，验证码已失效'}
         else:
             smsvcode = None
@@ -286,14 +294,12 @@ def mobile_insert(smsvc, password, mobile):
             return {'status':3, 'msg':'验证码不能为空'}
         elif smsvc != smsvcode and smsvc != '11111':
             return {'status': 4, 'msg': '短信验证码不正确'}
-        elif passwordlen < 6 or passwordlen > 20:
-            return {'status':5, 'msg':'密码长度需为6-20位'}
-
         verification_mobile = User.query.filter_by(mobile=mobile).first()
         if verification_mobile:
             return {'status': 6, 'msg': '手机号码已被注册'}
 
         userid = 'u' + generate_random_str(24)
+        
 
         insert_mobile = User(username=mobile, mobile=mobile, password=password, role='1', userid=userid)
         db.session.add(insert_mobile)
@@ -328,6 +334,7 @@ def password_jiaoyan(token, userid, password):
         else:
             user_password_query = User.query.filter_by(userid=userid).first()
             user_password = user_password_query.password
+            
             if user_password == password:
                 db.session.close()
                 return {'status': 0, 'msg': '校验成功'}
@@ -355,8 +362,8 @@ def user_forget_password(smsvc, password, mobile):
             smsvcode = user_sms_query.user_sms
             nowtime = datetime.now()
             smscreatetime = user_sms_query.createtime
-            if (nowtime - smscreatetime).seconds >= 3600:
-               return {'status':5,'msg':'注册失败，验证码已失效'}
+            if (nowtime - smscreatetime).seconds >= 360:
+                return {'status':5,'msg':'验证码已失效,请重新申请验证码'}
         else:
             smsvcode = None
 
@@ -366,9 +373,6 @@ def user_forget_password(smsvc, password, mobile):
         elif smsvc == 'null':
             db.session.close()
             return {'status': 2, 'msg': '验证码不能为空'}
-        elif passwordlen < 6 or passwordlen > 20:
-            db.session.close()
-            return {'status': 3, 'msg': '密码长度需为6-20位'}
         else:
             change_password_userid = User.query.filter_by(mobile=mobile).first()
             change_password_userid.password = password
@@ -405,8 +409,6 @@ def change_password(token, userid, newpassword, oldpassword):
         passwordlen = len(newpassword)
         if token != '11111':
             return {'status': 1, 'msg':'token无效'}
-        elif passwordlen < 6 or passwordlen > 20:
-            return {'status': 3, 'msg': '密码长度需为6-20位'}
         else:
             return_userinfo = User.query.filter_by(userid=userid).first()
             password = return_userinfo.password
@@ -454,7 +456,7 @@ def user_update_mobile(smsvc, token, userid, newmobile):
             smsvcode = user_sms_query.user_sms
             nowtime = datetime.now()
             smscreatetime = user_sms_query.createtime
-            if (nowtime - smscreatetime).seconds >= 3600:
+            if (nowtime - smscreatetime).seconds >= 360:
                return {'status':5,'msg':'注册失败，验证码已失效'}
         else:
             smsvcode = None
@@ -1068,6 +1070,16 @@ def user_login(mobile, password):
         return {'status': 3, 'Oooops': '数据库连接似乎出了问题'}
 """
 
+"""
+import hashlib
+def my_md5(s,salt=''):        #加盐，盐的默认值是空
+    s = s + salt
+    news = str(s).encode()    #先变成bytes类型才能加密
+    m = hashlib.md5(news)     #创建md5对象
+    return m.hexdigest()      #获取加密后的字符串
+"""
+
+
 def user_login(mobile, password):
     try:
         user_query = User.query.filter_by(mobile=mobile).first()
@@ -1080,6 +1092,11 @@ def user_login(mobile, password):
             return {'status': 10, 'msg': '用户已被禁用'}
 
         user_password = user_query.password
+        
+        """
+        salt = ""
+        user_password = my_md5(user_password,salt=salt)
+        """
 
         if user_password != password:
             return {'status': 1, 'msg': '用户名或密码错误'}
@@ -1271,7 +1288,8 @@ def user_login(mobile, password):
                 "userid": user_id,
                 "username": user_name,
             }
-
+            
+        db.session.close()
         # 0 为 登录成功
         # 1 为用户名或密码错误
         # 2 为用户名或密码错误
@@ -1463,6 +1481,8 @@ def company_insert(email, username, companyname, userid, token):
 """
 
 
+
+
 def company_insert(email, username, companyname, userid, token):
     try:
         #2 代表邮箱为空
@@ -1475,8 +1495,8 @@ def company_insert(email, username, companyname, userid, token):
         if token != '11111':
             return {'status': 1, 'msg': 'token不可用'}
 
-        if len(companyname) > 30:
-            return {'status': 6, 'msg': '公司名称不符合长度要求，公司名称应在30字以内'}
+        if len(companyname) > 50:
+            return {'status': 6, 'msg': '公司名称不符合长度要求，公司名称应在50字以内'}
         #elif re.search(r'^([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)$',companyname):
            #return {'status':'7','msg':'公司名称中不允许包含特殊字符，请重新输入'}
         elif len(email)== 0:
@@ -1485,8 +1505,8 @@ def company_insert(email, username, companyname, userid, token):
             return {'status':'7','msg':'请输入有效邮箱地址'}
         elif len(username) == 0:
             return {'status': 3, 'msg': '请先填写用户名'}
-        elif len(username) > 12:
-            return {'status': 6, 'msg': '用户名称不符合长度要求，用户名称应在12字以内'}
+        elif len(username) > 20:
+            return {'status': 6, 'msg': '用户名称不符合长度要求，用户名称应在20字以内'}
         elif len(companyname) ==0:
             return {'status':4, 'msg':'请先填写公司名称'}
         verification_company = Company.query.filter_by(companyname=companyname).first()
@@ -1501,15 +1521,24 @@ def company_insert(email, username, companyname, userid, token):
             user_mobile = user_query.mobile
             db.session.commit()
 
-            insert_company = Company(companyid=companyid, companyname=companyname, companyrole='1')
+            insert_company = Company(companyid=companyid, companyname=companyname, companyrole='1',companyemail=email)
             insert_opuser = Opuser(opusername=username, opuserid=userid,
                                    opmobile=user_mobile,opcompanyid=companyid,
-                                   default='true', oprole='4', opemail=email,
+                                   default='true', oprole='4'
                                    )
             db.session.add(insert_company)
             db.session.add(insert_opuser)
             db.session.commit()
             chatbotinfo = insert_chatbot(companyid)
+
+            #创建公司的时候顺便创建一台试用的zabbix服务器
+
+            zabbixserverid = 'z' + generate_random_str()
+            insert_zabbixserver = Zabbix(companyid=companyid, zabbixid=zabbixserverid,
+                                         zabbixserver="http://testdemod.cdwintech.com", zabbixuser="Admin",
+                                         zabbixpassword="zabbix")
+            db.session.add(insert_zabbixserver)
+            db.session.commit()
             db.session.close()
             return {'status': 0, 'msg': '公司创建成功','chatbotinfo':chatbotinfo,
                     'companyid':companyid,'mobile':user_mobile,
@@ -1529,7 +1558,7 @@ def join_company(userid, companyid, username , token):
         request_userid = userid
         join_company = User.query.filter_by(userid=request_userid).first()
         mobile = join_company.mobile
-        join_exsitcheck = Topic.query.filter_by(request_userid=request_userid,companyid=companyid).first()
+        join_exsitcheck = Topic.query.filter_by(request_userid=request_userid,companyid=companyid,request_username=username).first()
 
         if join_exsitcheck:
             join_exsitcheck_admin_action = join_exsitcheck.admin_action
@@ -1537,10 +1566,10 @@ def join_company(userid, companyid, username , token):
                 db.session.close()
                 return {'status': '0', 'msg': '不能重复申请'}
 
-            if join_exsitcheck_admin_action == '1':
+            if join_exsitcheck_admin_action == '1' or join_exsitcheck_admin_action == '3':
                 join_exsitcheck.admin_action = '2'
                 check_user_role_query = User.query.filter_by(userid=userid).first()
-                if check_user_role_query.role == '1':
+                if check_user_role_query.role == '1'  or check_user_role_query.role == '4':
                     check_user_role_query.role = '2'
 
                 admin_userid_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
@@ -1621,6 +1650,77 @@ def join_company(userid, companyid, username , token):
     except sqlalchemy.exc.OperationalError:
         return {'Oooops': 'There is a problem with the database'}
 
+
+"""
+# 获取公司状态
+def getCompanyStatus(companyid):
+    
+    if companyid:
+        try:
+            company_query = Company.query.filter_by(companyid=companyid).first()
+            if company_query:
+                company_status = company_query.disable
+   
+                a = {'status': 0, 'msg': '获取状态成功', 'company_status':'1111'}
+                return a
+            else:
+                a = {'status': 1, 'msg': '公司信息不存在'}
+                return a
+        except sqlalchemy.exc.OperationalError:
+            return {'status': 3, 'Oooops': '数据库连接出现错误'}
+    else:
+        return {'status': 1, 'msg': 'companyid 不能为空'}
+"""
+
+
+"""
+def getCompanyStatus(companyid):
+    
+    if companyid:
+        try:
+            company_query = Company.query.filter_by(companyid=companyid).first()
+            if company_query:
+                return  {'status': '0', 'msg': '获取公司信息成功', 'company_status': company_query.disable}
+            else:
+                return  {'status': '1', 'msg': '公司信息不存在'}
+        except sqlalchemy.exc.OperationalError:
+           return  {'status': '3', 'msg': '数据库连接出现错误'}
+    else:
+     return {'status': '1', 'msg': 'companyid不能为空'}
+"""
+
+
+# 获取用户公司状态
+def getUserCompanyStatus(userid, companyid):
+    if companyid:
+        try:
+            company_query = Company.query.filter_by(companyid=companyid).first()
+            # 公司信息存在
+            if company_query:
+                
+                # 公司被禁用
+                if company_query.disable == 1:
+                    return  {'status': '0', 'msg': '获取信息成功', 'company_status': '1'}
+                # 公司有效 查询公司中是否存在这个用户
+                else:
+                    company_user_query = Opuser.query.filter_by(opcompanyid = companyid,
+                                                                opuserid = userid).first()
+                    
+                    # 在公司中查询到了这个用户
+                    if company_user_query :
+                        return  {'status': '0', 'msg': '获取信息成功', 'company_status': '3'}
+                    # 公司中不存在这个用户
+                    else:
+                        return  {'status': '0', 'msg': '获取信息成功', 'company_status': '2'}
+            # 公司信息不存在
+            else:
+                return  {'status': '1', 'msg': '公司信息不存在', 'company_status': '4'}
+        except sqlalchemy.exc.OperationalError:
+            return  {'status': '3', 'msg': '数据库连接出现错误'}
+    else:
+        return {'status': '1', 'msg': 'companyid不能为空'}
+
+
 def leave_company(usertoken, userid, companyid):
     try:
         if usertoken != '11111':
@@ -1670,6 +1770,7 @@ def join_info(userid, token, companyid):
                     request_create_time_chuo = time.mktime(request_create_time.timetuple())
                     admin_user_dict['request_username'] = admin_user.request_username
                     admin_user_dict['request_mobile'] = admin_user.request_mobile
+                    admin_user_dict['request_id'] = admin_user.id
                     admin_user_dict['request_userid'] = admin_user.request_userid
                     admin_user_dict['request_companyid'] = admin_user.companyid
                     request_user_request_img_query = User.query.filter_by(userid=admin_user.request_userid).first()
@@ -1758,6 +1859,11 @@ def sidebar_get(userid, token):
 
             db.session.close()
             return rs
+        
+        if query_role == '4':
+            return {'status': 0, 'msg': '查询成功', 'username': query_username,
+                    'companyname': None, 'companyid': None,
+                    'companyrole': None, 'mobile': query_mobile, 'role': query_role}
 
         query_oprole_query = Opuser.query.filter_by(opuserid=userid, default='true').first()
         if query_oprole_query:
@@ -1850,7 +1956,7 @@ def sidebar_get(userid, token):
     except sqlalchemy.exc.OperationalError:
         return {'Oooops': 'There is a problem with the database'}
 
-def join_update(userid, token, request_userid, admin_action, request_companyid):
+def join_update(request_id,userid, token, request_userid, admin_action, request_companyid):
     try:
 
         if token != '11111':
@@ -1861,8 +1967,7 @@ def join_update(userid, token, request_userid, admin_action, request_companyid):
             db.session.close()
             return {'status': 2, 'msg': '没有权限查看此页面'}
 
-        join_info_query = Topic.query.filter_by(admin_userid=userid, request_userid=request_userid, companyid=request_companyid).first()
-
+        join_info_query = Topic.query.filter_by(id=request_id).first()
         if admin_action == '1':
             join_info_query.admin_action = '1'
             check_user_role_query = User.query.filter_by(userid=request_userid).first()
@@ -2469,10 +2574,10 @@ def cancel_companyapplication(companyid, usertoken, userid):
                 if opuser.opcompanyid != companyid:
                     user = User.query.filter_by(userid=userid).first()
                     user.role = '0'
-                    application = Topic.query.filter_by(companyid=companyid, request_userid=userid).first()
+                    application = Topic.query.filter_by(companyid=companyid,request_userid=userid).order_by(desc(Topic.id)).first()
                     if application:
 
-                        application.admin_action = '1'
+                        application.admin_action = '3'
 
                     myopuser = Opuser.query.filter_by(opuserid=userid,opcompanyid=companyid).delete()
 
@@ -2484,11 +2589,10 @@ def cancel_companyapplication(companyid, usertoken, userid):
 
                 else:
                     user = User.query.filter_by(userid=userid).first()
-                    user.role = '1'
-                    application = Topic.query.filter_by(companyid=companyid, request_userid=userid).first()
- 
+                    user.role = '4'
+                    application = Topic.query.filter_by(companyid=companyid,request_userid=userid).order_by(desc(Topic.id)).first() 
                     if application:
-                        application.admin_action = '1'
+                        application.admin_action = '3'
                     myopuser = Opuser.query.filter_by(opuserid=userid, opcompanyid=companyid).delete()
                     db.session.commit()
                     db.session.close()

@@ -160,17 +160,21 @@ def backstagecms(userid, token, page):
         companymark = company_query.companymark
         expirestring = ""
         if companyexpire:
-            if companyexpire <= expire_date and companyexpire >= todays_datetime:
+            if companyexpire <= expire_date and companyexpire >= todays_datetime and disable == False:
                 expirestring = "即将到期"
-            elif companyexpire <= todays_datetime:
+            elif companyexpire <= expire_date and companyexpire >= todays_datetime and disable == False:
+                expirestring = "即将到期"
+            elif companyexpire <= todays_datetime and disable== False:
+                expirestring = "试用中"
+            elif disable == True:
                 expirestring = "停用中"
-            elif disable == 1:
-                expirestring = "停用中"
-            else:
+            elif companyexpire > expire_date and disable == False:
                 expirestring = "正常使用中"
             companyexpire = int(round(time.mktime(companyexpire.timetuple()) * 1000))
         elif disable == 0 and companyexpire is None:
             expirestring = "试用中"
+        elif disable == 1 and companyexpire is None:
+            expirestring = "停用中"
         rs_query_dict = {'companyid':companyid, 'companyname': companyname, 'adminusername': adminusername,
           'adminmobile': adminmobile,'adminemail':companyemail,"zabbixid":zabbixid,"zabbixserver":zabbixserver,"zabbixuser":zabbixuser,"zabbixpassword":zabbixpassword,
           'companyexpire': companyexpire,'totalhost':totalhost,"zabbix_exist":zabbix_exist,"disable":disable,
@@ -314,11 +318,11 @@ def backstagecm1(userid, token, searchcompanyid, page):
 def backstagetryouts(userid, token, page):
     if token != '11111':
         return {'status':1, 'msg':'token不可用'}
-
+    todays_datetime = datetime(datetime.today().year, datetime.today().month, datetime.today().day)
     #试用公司
     rs_query_list = []
     page = int(page)
-    companys_query = Company.query.filter_by(companyrole='1').order_by(Company.createtime.desc()).paginate(page, per_page=15, error_out=False)
+    companys_query = Company.query.filter_by(companyexpiredate=None).order_by(Company.createtime.desc()).paginate(page, per_page=15, error_out=False)
     companys_page_query = companys_query.items
 
     companys_total =  len(companys_page_query) / 15
@@ -363,13 +367,19 @@ def backstagetryouts(userid, token, page):
         admimemail = company_query.companyemail
         defaultcompany = adminuser_query.default
         companymark = company_query.companymark
-
+     
         if companyexpire:
+            if companyexpire <= todays_datetime:
+                expirestring = "试用公司"
             companyexpire = int(round(time.mktime(companyexpire.timetuple()) * 1000))
+        else:
+            expirestring = "试用中"
+            if disable == True:
+                expirestring = "停用中"
         rs_query_dict = {'companyid':companyid, 'companyname': companyname, 'adminusername': adminusername,
           'adminmobile': adminmobile,'adminemail':admimemail,"zabbixid":zabbixid,"zabbixserver":zabbixserver,"zabbixuser":zabbixuser,"zabbixpassword":zabbixpassword,
           'companyexpire': companyexpire,'totalhost':totalhost,"zabbix_exist":zabbix_exist,"disable":disable,
-            'companyrole':companyrole, 'members':totalcompanyusers,
+            'companyrole':companyrole, 'members':totalcompanyusers,"expirestring":expirestring,
                          'companymark': companymark,'defaultcompany':defaultcompany
           }
         rs_query_list.append(rs_query_dict)
@@ -507,8 +517,10 @@ def backstagenewcompanytoday(userid, token, page):
         else:
             totalhost = None
         companyname = company_query.companyname
+        disable = company_query.disable
         companyexpire = company_query.companyexpiredate
         companyrole = company_query.companyrole
+        companyemail = company_query.companyemail
         user_query = Opuser.query.filter_by(opcompanyid=companyid).all()
         totalcompanyusers = len(user_query)
         adminuser_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
@@ -517,12 +529,26 @@ def backstagenewcompanytoday(userid, token, page):
         admimemail = company_query.companyemail
         defaultcompany = adminuser_query.default
         companymark = company_query.companymark
-
+        expirestring = ""
         if companyexpire:
+            if companyexpire <= expire_date and companyexpire >= todays_datetime and disable == False:
+                expirestring = "即将到期"
+            elif companyexpire <= expire_date and companyexpire >= todays_datetime and disable == False:
+                expirestring = "即将到期"
+            elif companyexpire <= todays_datetime and disable== False:
+                expirestring = "试用中"
+            elif disable == True:
+                expirestring = "停用中"
+            elif companyexpire > expire_date and disable == False:
+                expirestring = "正常使用中"
             companyexpire = int(round(time.mktime(companyexpire.timetuple()) * 1000))
+        elif disable == 0 and companyexpire is None:
+            expirestring = "试用中"
+        elif disable == 1 and companyexpire is None:
+            expirestring = "停用中"
         rs_query_dict = {'companyid':companyid, 'companyname': companyname, 'adminusername': adminusername,
-          'adminmobile': adminmobile,'adminemail':admimemail,
-          'companyexpire': companyexpire,'totalhost':totalhost,
+          'adminmobile': adminmobile,'adminemail':admimemail,"companyemail":companyemail,
+          'companyexpire': companyexpire,'totalhost':totalhost,"expirestring":expirestring,"disable":disable,
             'companyrole':companyrole, 'members':totalcompanyusers,
                          'companymark': companymark,'defaultcompany':defaultcompany
           }
@@ -700,6 +726,7 @@ def companypatch(userid, usertoken,oldcompanyname, newcompanyname,companyemail, 
             #companyid_query.companyrole = 2
             companyid_query.disable = disable
             #这个地方注意一下
+            """
             opusers_query = Opuser.query.filter_by(opcompanyid=companyid_query.companyid).all()
             for opuser in opusers_query:
                user_query = User.query.filter_by(userid=opuser.opuserid)
@@ -707,10 +734,116 @@ def companypatch(userid, usertoken,oldcompanyname, newcompanyname,companyemail, 
                    user_query.role = '0'
                elif disable == 1:
                    user_query.role = '1'
+            """
+            opusers_query = Opuser.query.filter_by(opcompanyid=companyid_query.companyid).all()
+            for opuser in opusers_query:
+               opuserid = opuser.opuserid
+               companys = Opuser.query.filter(opuserid==opuserid,disable==0,Opuser.opcompanyid!=companyid_query.companyid).all()               
 
+               if companys:
+                   user_query = User.query.filter_by(userid=opuser.opuserid)
+                   if disable == 0:
+                       user_query.role = '0'
+                   elif disable == 1:
+                       user_query.role = '0'
+               else:
+                   user_query = User.query.filter_by(userid=opuser.opuserid)
+                   if disable == 0:
+                       user_query.role = '0'
+                   elif disable == 1:
+                       user_query.role = '1'
+            if disable == 0:
+                opusers_query = Opuser.query.filter_by(opcompanyid=companyid_query.companyid).all()
+                for opuser in opusers_query:
+                    user_query = User.query.filter_by(userid=opuser.opuserid).first()
+                    user_query.role = '0'
             db.session.commit()
             db.session.close()
-            return {'status': 0, 'msg': '修改成功'}
+            expirestring = ""
+
+            if newcompanyname != None and newcompanyname !="":
+                todays_datetime = datetime(datetime.today().year, datetime.today().month, datetime.today().day)
+                backstage_expiredate_query = Backstage.query.first()
+                backstage_expiredate = backstage_expiredate_query.companyexpire
+                expire_date = todays_datetime + timedelta(days=int(backstage_expiredate))
+                company_query = Company.query.filter_by(companyname=newcompanyname).first()
+                companyname = company_query.companyname
+                disable = company_query.disable
+                companyexpire = company_query.companyexpiredate
+                companyrole = company_query.companyrole
+                companyemail = company_query.companyemail
+                companyid = company_query.companyid
+                adminuser_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
+                adminusername = adminuser_query.opusername
+                adminmobile = adminuser_query.opmobile
+                admimemail = company_query.companyemail
+                defaultcompany = adminuser_query.default
+                companymark = company_query.companymark
+                expirestring = ""
+                if companyexpire:
+                    if companyexpire <= expire_date and companyexpire >= todays_datetime and disable == False:
+                        expirestring = "即将到期"
+                    elif companyexpire <= expire_date and companyexpire >= todays_datetime and disable == False:
+                        expirestring = "即将到期"
+                    elif companyexpire <= todays_datetime and disable== False:
+                        expirestring = "试用中"
+                    elif disable == True:
+                        expirestring = "停用中"
+                    elif companyexpire > expire_date and disable == False:
+                        expirestring = "正常使用中"
+                    companyexpire = int(round(time.mktime(companyexpire.timetuple()) * 1000))
+                elif disable == 0 and companyexpire is None:
+                    expirestring = "试用中"
+                elif disable == 1 and companyexpire is None:
+                    expirestring = "停用中"
+
+                rs_query_dict = {'companyid':companyid, 'companyname': companyname, 'adminusername': adminusername,
+                                'adminmobile': adminmobile,'adminemail':admimemail,"companyemail":companyemail,
+                                'companyexpire': companyexpire,"disable":disable,
+                                'companyrole':companyrole,"expirestring":expirestring,
+                                'companymark': companymark,'defaultcompany':defaultcompany }
+            else:
+                todays_datetime = datetime(datetime.today().year, datetime.today().month, datetime.today().day)
+                backstage_expiredate_query = Backstage.query.first()
+                backstage_expiredate = backstage_expiredate_query.companyexpire
+                expire_date = todays_datetime + timedelta(days=int(backstage_expiredate))
+                company_query = Company.query.filter_by(companyname=oldcompanyname).first()
+                companyname = company_query.companyname
+                disable = company_query.disable
+                companyexpire = company_query.companyexpiredate
+                companyrole = company_query.companyrole
+                companyemail = company_query.companyemail
+                companyid = company_query.companyid
+                adminuser_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
+                adminusername = adminuser_query.opusername
+                adminmobile = adminuser_query.opmobile
+                admimemail = company_query.companyemail
+                defaultcompany = adminuser_query.default
+                companymark = company_query.companymark
+                expirestring = ""
+                if companyexpire:
+                    if companyexpire <= expire_date and companyexpire >= todays_datetime and disable == False:
+                        expirestring = "即将到期"
+                    elif companyexpire <= expire_date and companyexpire >= todays_datetime and disable == False:
+                        expirestring = "即将到期"
+                    elif companyexpire <= todays_datetime and disable== False:
+                        expirestring = "试用中"
+                    elif disable == True:
+                        expirestring = "停用中"
+                    elif companyexpire > expire_date and disable == False:
+                        expirestring = "正常使用中"
+                    companyexpire = int(round(time.mktime(companyexpire.timetuple()) * 1000))
+                elif disable == 0 and companyexpire is None:
+                    expirestring = "试用中"
+                elif disable == 1 and companyexpire is None:
+                    expirestring = "停用中"
+
+                rs_query_dict = {'companyid':companyid, 'companyname': companyname, 'adminusername': adminusername,
+                                'adminmobile': adminmobile,'adminemail':admimemail,"companyemail":companyemail,
+                                'companyexpire': companyexpire,"disable":disable,
+                                'companyrole':companyrole,"expirestring":expirestring,
+                                'companymark': companymark,'defaultcompany':defaultcompany }
+            return {'status': 0, 'msg': '修改成功',"companyinfo":rs_query_dict}
 
 def companydelete(userid, usertoken,companyname):
     if usertoken != '11111':

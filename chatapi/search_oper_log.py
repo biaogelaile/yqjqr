@@ -145,7 +145,11 @@ def operation_search_condition(usertoken, companyid, search_command=None, search
         try:
             all_company_result = Opuser.query.filter_by(opcompanyid=companyid).order_by(desc(Opuser.id)).all()
             users = []
-
+            templist = []
+            for temp in all_company_result:
+                if temp.oprole != '2' and  temp.oprole !='5':
+                    templist.append(temp)
+            all_company_result = templist
             if len(all_company_result) == 0:
                 #查询为空
                 result["result"] = []

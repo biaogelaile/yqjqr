@@ -14,10 +14,10 @@ apiurl =  serverip + '/api/v1/login'
 apigetmonitorurl = serverip + '/api/v1/zabbixmonitor'
 #apiurl = 'http://139.196.107.14:5000/api/v1/login'
 #payload = {"password": "ppy6rQ3iAMKNzpDjpqYdP29g1STvoz6t0", "mobile": "c2YDSc5nIO7u0Bxjy7JHj0VOy"}
-payload = {"password": "pphPg79nA6fKwS9GvlyuwhHUH59UIOfXj", "mobile": "cprjyFN5yFo0A6VDVjpRL7Aoa"}
+payload = {"password": "i8Ts9fJeBa5Q3AU2Ift74g==", "mobile": "cprjyFN5yFo0A6VDVjpRL7Aoa"}
 header = {'Content-Type': 'application/json'}
 
-
+#产生一个随机字符串
 def generate_random_str(randomlength=16):
     """
     生成一个指定长度的随机字符串，其中
@@ -35,25 +35,30 @@ print(loginrs.json())
 token = loginrs.json()['token']
 companyid = loginrs.json()['companyid']
 
+#机器人登录
 def botjoinroot(message):
     msgid = generate_random_str(48)
     sendmsg = {'token': token,'role':'chatbot', 'companyid':companyid, 'msg': message, 'msgid':msgid}
     socket.emit('talk', sendmsg)
 
+#发送消息
 def sendmsg(message):
     msgid = generate_random_str(48)
     sendmsg = {'token': token, 'companyid':companyid, 'msg': message, 'msgid':msgid}
     socket.emit('talk', sendmsg)
 
 
+#连接响应
 def conn_response(*args):
     print(args[0])
 
 
+#talk响应
 def talk_response(*args):
     print('talk zzzzzzzzzzz')
     print(args[0])
 
+#发送消息类型2
 def botsendmsgtype2(username):
     msgid = generate_random_str(48)
     sendmsgtype2 = {'data': {'type': 2,'companyid':companyid,'msgid':msgid, 'token': token, 'rootbean':
@@ -69,19 +74,22 @@ def botsendmsgtype2(username):
     print('ooooooh yes')
 
 
-
+#发送查询主机cpu消息
 def botsendmsgtype3(host):
     msgid = generate_random_str(48)
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=' + companyid, headers=header)
     if getinfo.status_code != 200:
-        pass
+        print("你们先过了我这一关！！！！！")
     else:
         print('hhhhhhhhhhh', getinfo.json())
         if 'status' in getinfo.json():
             print('不存在host', host)
+            #sendmsgtype3 = {
+               # 'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   # {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
             sendmsgtype3 = {
-                'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
-                    {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
 
         else:
             lastvalue_str = getinfo.json()['cpu'][0]['lastvalue']
@@ -105,32 +113,25 @@ def botsendmsgtype3(host):
                 ]}}}
 
         socket.emit('chatbot', sendmsgtype3)
-        exec_com = "cpu"
-        ip = host
-        hostname = host
-
-        exec_time = datetime(datetime.today().year, datetime.today().month, datetime.today().day, datetime.today().hour,
-                             datetime.today().minute, datetime.today().second)
-        addoperation_payload = {"username": "ccscscscsc", "companyid": companyid, "exec_com": exec_com, "ip": ip,
-                                "hostname": hostname, "exec_time": exec_time}
-        url_s = serverip + '/api/v1/operation/operation_log_save'
-        saveoperation_rs = requests.post(url_s, data=json.dumps(addoperation_payload), headers=header)
-        if saveoperation_rs.status_code == 200:
-            pass
-        else:
-            print("Something wrong")
 
         print('ooooooh yes')
 
+
+#发送查询主机内存消息
 def botsendmsgtype4(host):
     msgid = generate_random_str(48)
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=' + companyid, headers=header)
     print('hhhhhhhhhhh', getinfo.json())
     if 'status' in getinfo.json():
         print('不存在host', host)
+        """
         sendmsgtype4 = {
             'data': {'type': 1, 'token': token, 'msgid':msgid,'companyid': companyid, 'rootbean':
                 {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
+        """
+        sendmsgtype4 = {
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
     else:
         total_memory_lastvalue = getinfo.json()['total_memory'][0]['lastvalue']
         available_memory_lastvalue = getinfo.json()['available_memory'][0]['lastvalue']
@@ -160,6 +161,7 @@ def botsendmsgtype4(host):
     print('ooooooh yes')
 
 
+#发送查询主机网络消息
 def botsendmsgtype8(host):
     msgid = generate_random_str(48)
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=' + companyid, headers=header)
@@ -167,9 +169,8 @@ def botsendmsgtype8(host):
     if 'status' in getinfo.json():
         print('不存在host', host)
         sendmsgtype8 = {
-            'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
-                {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
-
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
     else:
         monitorinfo = getinfo.json()
         hostip = getinfo.json()['hostip']
@@ -229,7 +230,7 @@ def botsendmsgtype8(host):
     socket.emit('chatbot', sendmsgtype8)
     print('ooooooh yes')
 
-
+#发送查询主机磁盘状态消息
 def botsendmsgtype6(host):
     msgid = generate_random_str(48)
     getinfo = requests.get(apigetmonitorurl + '/' + host + '?token=' + token + '&companyid=' + companyid, headers=header)
@@ -238,9 +239,8 @@ def botsendmsgtype6(host):
     if 'status' in getinfo.json():
         print('不存在host', host)
         sendmsgtype6 = {
-            'data': {'type': 1, 'token': token, 'msgid':msgid,'companyid': companyid, 'rootbean':
-                {'msg': "Ooops，未找到此主机：" + host + "，请检查输入的hostid/hostname/hostip"}}}
-
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
     else:
         monitorinfo = getinfo.json()
         diskinfo_list = monitorinfo['disk']
@@ -314,6 +314,8 @@ def botsendmsgtype1(username):
     print('ooooooh yes')
 
 
+
+#审核不同类型的消息
 def botsendmsgtype11(host ,role, oprole, action, commandType):
     msgid = generate_random_str(32)
     
@@ -338,11 +340,11 @@ def botsendmsgtype11(host ,role, oprole, action, commandType):
 
                 rebootrs = requests.post(url=rebooturl, data=json.dumps(payload), headers=header)
 
-                rebootrs.status_code = 200
-
                 if rebootrs.status_code == 200:
-                    rebootrs_dict_str = rebootrs.json()
-                    rebootrs_dict = eval(rebootrs_dict_str)
+                    #rebootrs_dict_str = rebootrs.json()
+                    #print(rebootrs_dict_str)
+                    # rebootrs_dict = eval(rebootrs_dict_str)a
+                    rebootrs_dict = rebootrs.json()
                     status = rebootrs_dict['status']
                     if status == 0:
                         sendmsg(host + " 重启成功!")
@@ -359,7 +361,6 @@ def botsendmsgtype11(host ,role, oprole, action, commandType):
                 print(host)
                 botsendmsgtype4(host)
             elif commandType == 6:
-                print('查看主机磁盘状态执行中...')
                 print(host)
                 botsendmsgtype6(host)
             elif commandType == 8:
@@ -391,9 +392,8 @@ def botsendmsgtype12(host, role, oprole):
     if 'status' in getinfo.json():
         print('不存在host', host)
         sendmsgtype12 = {
-            'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
-                {'msg': "Ooops，没找到服务器：" + host + "，请重新输入。"}}}
-
+               'data': {'type': 1, 'token': token,'msgid':msgid, 'companyid': companyid, 'rootbean':
+                   {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
     else:
         hostip = getinfo.json()['hostip']
         #
@@ -437,6 +437,7 @@ def botsendmsgtype12(host, role, oprole):
     print('ooooooh yes')
 
 
+#机器人响应
 def chatbot_response(*args):
     try:
         print('chatbot zzzzzzzzzzz')
@@ -447,11 +448,9 @@ def chatbot_response(*args):
 
         if botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 1:
             botsendmsgtype1(username)
-            print('lalalalalalalalal')
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 2:
             botsendmsgtype2(username)
         elif botmsgdict['data']['oprole'] != '5' and botmsgdict['data']['type'] == 10:
-                print(botmsgdict['data'])
                 host = botmsgdict['data']['rootbean']['hostip']
                 role = botmsgdict['data']['role']
                 oprole = botmsgdict['data']['oprole']
@@ -474,14 +473,16 @@ def chatbot_response(*args):
                 ip = host
                 hostname = host
                 exec_time = datetime(datetime.today().year, datetime.today().month, datetime.today().day,datetime.today().hour,datetime.today().minute,datetime.today().second)
-                print(exec_time)
+                exec_time = exec_time.strftime("%Y-%m-%d %H:%M:%S")
                 addoperation_payload = {"username":username,"companyid":companyid,"exec_com":exec_com,"ip":ip,"hostname":hostname,"exec_time":exec_time}
-                url_s = serverip + '/api/v1/login'
+                url_s = serverip + '/api/v1/operation/operation_log_save'
                 saveoperation_rs = requests.post(url=url_s, data=json.dumps(addoperation_payload), headers=header)
 
-    except:
+    except Exception as e:
+        print(e)
         print("Ooops, somethings waring")
 
+#监控constatus消息
 def conn():
     socket.emit('conn', 'test')
     botjoinroot('join room')

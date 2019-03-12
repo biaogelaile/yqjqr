@@ -9,7 +9,7 @@ import push_msg
 import salt_exec
 import search_oper_log
 import demjson
-
+from model import *
 #获取短信通知
 @app.route('/api/v1/sms', methods=['POST'])
 def SmsVC():
@@ -40,6 +40,7 @@ def UserInfoGet():
 @app.route('/api/v1/youke', methods=['GET'])
 def YoukeInfoGet():
     token = request.args.get('token')
+    #token = "youkechatbot-11111"
     usertoken = token.split('-')[1]
     userid = token.split('-')[0]
     userinfo = user_info(userid, usertoken, None)
@@ -219,13 +220,15 @@ def SidebarInfo():
 @app.route('/api/v1/joininfo', methods=['POST'])
 def JoinUpdate():
     request_data = request.get_json()
+    print(request_data)
     token = request_data['token']
     admin_action = request_data['admin_action']
     request_userid = request_data['request_userid']
+    request_id = request_data['request_id']
     request_companyid = request_data['request_companyid']
     userid = token.split('-')[0]
     usertoken = token.split('-')[1]
-    joininfors = join_update(userid, usertoken,request_userid, admin_action, request_companyid)
+    joininfors = join_update(request_id,userid, usertoken,request_userid, admin_action, request_companyid)
     return jsonify(joininfors)
 
 #获取某个公司的成员信息
@@ -383,6 +386,20 @@ def AddZabbixMonitor():
     usertoken = token.split('-')[1]
     joininfors = zabbix_quey.zabbixmonitor_add(userid, usertoken, hostinfo_list, companyid)
     return jsonify(joininfors)
+
+
+#添加所有zabbix服务器
+@app.route('/api/v1/zabbixallmonitor', methods=['POST'])
+def AddZabbixAllMonitor():
+    request_data = request.get_json()
+    token = request_data['token']
+    hostinfo_list = request_data['hostinfo']
+    companyid = request_data['companyid']
+    userid = token.split('-')[0]
+    usertoken = token.split('-')[1]
+    joininfors = zabbix_quey.zabbixallmonitor_add(userid, usertoken, hostinfo_list, companyid)
+    return jsonify(joininfors)
+
 
 
 #查询zabbix所有主机信息
@@ -655,8 +672,9 @@ def getcomplanyallhostvalue():
     else:
         #游客，设置和试用中公司项目的角色
         company_role = "2"
-    """
-    if role == "0" and companyid != "" and company_role != "1":
+  
+    #if role == "0" and companyid != "" and company_role != "1":
+    if role == "0" and companyid != "":
         #合法用户
         #with ThreadPoolExecutor(2) as executor:
            #all_host_values = executor.submit(zabbix_quey.zabbix_get_complay_hosts, usertoken, companyid)
@@ -671,8 +689,8 @@ def getcomplanyallhostvalue():
                                                 {"free": 91.4891, "key": "disk", "partition": "/boot", "total": 100.0},
                                                 {"available": 20.8195, "key": "memory", "total": 31.4851},
                                                 {"available": 95.9, "key": "network", "total": 100.0}]}], "status": 0}
-    """
-    result = zabbix_quey.zabbix_get_complay_hosts(usertoken,companyid)
+   
+    #result = zabbix_quey.zabbix_get_complay_hosts(usertoken,companyid)
     return jsonify(result)
 
 
@@ -734,12 +752,14 @@ def push_msg_to_ios():
 def exec_command():
     try:
         request_data = request.get_json()
+        print(request_data)
         usertoken = request_data['usertoken']
         userid = request_data['userid']
         clientip = request_data['clientip']
         command = request_data['command']
         companyid = request_data['companyid']
-        hostname = request_data['hostname']
+        hostinfo = Monitor.query.filter_by(zabbixhostip=clientip).first()
+        hostname = hostinfo.zabbixhostname
     except:
         result = {
             "result": "parameter error",
@@ -1054,6 +1074,7 @@ def search_operation_search_condition():
 def search_operation_search_condition():
     try:
         request_data = request.get_json()
+        print(request_data)
         usertoken = request_data['usertoken']
         companyid = request_data['companyid']
         role = request_data['role']
@@ -1213,6 +1234,25 @@ def search_operation_with_condition():
 
     return demjson.encode(result)
 
+"""
+#获取公司状态
+@app.route('/api/v1/companyStatus', methods=['GET'])
+def CompanyStatus():
+    companyid = request.args.get('companyid')
+    companyStatus = getCompanyStatus(companyid)
+    return jsonify(companyStatus)
+"""
+
+# 获取用户公司状态
+@app.route('/api/v1/userCompanyStatus', methods=['GET'])
+def UserCompanyStatus():
+    
+    token = request.args.get('token')
+    companyid = request.args.get('companyid')
+    userid = token.split('-')[0]
+    userCompanyStatus = getUserCompanyStatus(userid, companyid)
+    return jsonify(userCompanyStatus)
+
 
 #获取目标主机磁盘性能
 @app.route('/api/v1/salt/diskperformance', methods=['POST'])
@@ -1253,6 +1293,12 @@ def user_exec_command():
                             "server":"192.168.1.1"},"status":0}
 
     return demjson.encode(result)
+
+@app.route('/api/v1/md5', methods=['POST'])
+def UserRegistr111y():
+
+    registryrs = md5_password()
+    return jsonify(registryrs)
 
 
 if __name__ == '__main__':

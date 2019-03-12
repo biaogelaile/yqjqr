@@ -261,7 +261,7 @@ def BackstageUserstopped():
     joininfors = backstageuserstopped(userid, usertoken, page)
     return jsonify(joininfors)
 
-
+"""
 #修改用户禁用/启用状态
 @app.route('/backstage/user', methods=['PATCH'])
 def BackstagePatchUsers():
@@ -274,6 +274,7 @@ def BackstagePatchUsers():
     joininfors = userdisable(adminuserid, adminusertoken, userstatus, userid)
     return jsonify(joininfors)
 
+
 @app.route('/backstage/user', methods=['DELETE'])
 def BackstageDeleteUsers():
     token = request.args.get('token')
@@ -281,6 +282,31 @@ def BackstageDeleteUsers():
     adminusertoken = token.split('-')[1]
     userid = request.args.get('userid')
     joininfors = userdelete(adminuserid, adminusertoken, userid)
+    return jsonify(joininfors)
+"""
+
+# 删除用户-运维用户
+@app.route('/backstage/user', methods=['DELETE'])
+def BackstageDeleteUsers():
+    token = request.args.get('token')
+    adminuserid = token.split('-')[0]
+    adminusertoken = token.split('-')[1]
+    userid = request.args.get('userid')
+    companyid = request_data['companyid']
+    joininfors = userdelete(adminuserid, adminusertoken, userid, companyid)
+    return jsonify(joininfors)
+
+# 用户停用、启用
+@app.route('/backstage/user', methods=['PATCH'])
+def BackstagePatchUsers():
+    request_data = request.get_json()
+    token = request_data['token']
+    adminuserid = token.split('-')[0]
+    adminusertoken = token.split('-')[1]
+    userstatus = request_data['userdisable']
+    userid = request_data['userid']
+    companyid = request_data['companyid']
+    joininfors = userdisable(adminuserid, adminusertoken, userstatus, userid, companyid)
     return jsonify(joininfors)
 
 

@@ -134,6 +134,7 @@ class Monitor(db.Model):
     zabbixhostname = db.Column(db.String(128), nullable=False, comment='zabbix hostname')
     zabbixitemid = db.Column(db.String(1280), nullable=True, comment='zabbix组id')
     zabbixitemname = db.Column(db.String(128), nullable=True, comment='zabbix组id')
+    save = db.Column(db.String(128), nullable=True, comment='临时存放')
     createtime = db.Column(db.TIMESTAMP(True), nullable=False,comment='创建时间')
     updatetime = db.Column(db.TIMESTAMP(True), nullable=False, comment='更新时间')
 

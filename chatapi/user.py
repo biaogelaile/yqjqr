@@ -212,7 +212,6 @@ def user_info(userid, token, companyid):
         if user_role != '1' and user_role != '2':
             backstage_info = Backstage.query.first()
             date_inter = backstage_info.companyexpire
-            print("提醒的间隔天数是%s" % date_inter)
             currenttime = datetime(datetime.today().year, datetime.today().month, datetime.today().day, datetime.today().hour, datetime.today().minute, datetime.today().second)
             company_query = Company.query.filter_by(companyid=companyid).first()
             if company_query:
@@ -222,9 +221,9 @@ def user_info(userid, token, companyid):
                     minus0 = user_companyexpiredate - currenttime
                     minus = minus0.total_seconds()
                     print("minus$$$$$$$$$$$$$$$$$$$$$$%s"%minus)
-                    if minus > 0 and minus > float(date_inter):
+                    if minus > 0 and minus > float(date_inter)*3600*24:
                         displaystatus = 0
-                    elif minus > 0 and minus < float(date_inter):
+                    elif minus > 0 and minus < float(date_inter)*3600*24:
                         displaystatus = 1
                     elif minus < 0:
                         pass
@@ -1613,7 +1612,7 @@ def join_company(userid, companyid, username , token):
             db.session.close()
             return {'status': '2', 'msg': '用户已存在'}
         else:
-            if join_company.role == '1':
+            if join_company.role == '1' or join_company.role == '4':
                 join_company.role = '2'
             else:
                 pass
@@ -1806,6 +1805,9 @@ def sidebar_get(userid, token):
         query_role = sidebar_get.role
         query_mobile = sidebar_get.mobile
         query_username = sidebar_get.username
+        #当期时间
+        currenttime = datetime(datetime.today().year, datetime.today().month, datetime.today().day,
+                               datetime.today().hour, datetime.today().minute, datetime.today().second)
         if query_role == '1':
             check_action_role_query = Topic.query.filter_by(request_userid=userid, admin_action='1').first()
             if check_action_role_query:
@@ -1841,9 +1843,8 @@ def sidebar_get(userid, token):
                 #check_action_allrole_list_query = Topic.query.filter_by(request_userid=userid, companyid=opusercompanyid).first()
                 action_role = '2'
                 opcompanyinfo_query = Company.query.filter_by(companyid=opusercompanyid).first()
-                opcompanyname = opcompanyinfo_query.companyname
+                opcompanyname = opcompanyinfo_query.companyname 
                 opcompanyrole = opcompanyinfo_query.companyrole
-                opcompanyexpiredate = opcompanyinfo_query.companyexpiredate
                 query_oprole_query = Opuser.query.filter_by(opuserid=userid).first()
                 query_oprole = query_oprole_query.oprole
                 check_action_role_query = Topic.query.filter_by(companyid=opusercompanyid, request_userid=userid).first()
@@ -1881,6 +1882,14 @@ def sidebar_get(userid, token):
                 opcompanyrole = opcompanyinfo_query.companyrole
                 opcompanyexpiredate = opcompanyinfo_query.companyexpiredate
                 if opcompanyexpiredate:
+                    minus = (opcompanyexpiredate - currenttime).total_seconds()
+                    if minus < 0:
+                        opcompanyinfo_query.companyrole = '1'
+                    else:
+                        opcompanyinfo_query.companyrole = '2'
+                    db.session.commit()
+                opcompanyrole = opcompanyinfo_query.companyrole
+                if opcompanyexpiredate:
                     request_create_time_chuo = int(time.mktime(opcompanyexpiredate.timetuple()))
                 else:
                     request_create_time_chuo = None
@@ -1898,8 +1907,15 @@ def sidebar_get(userid, token):
                 opcompanyinfo_query = Company.query.filter_by(companyid=opusercompanyid).first()
                 opcompanyname = opcompanyinfo_query.companyname
                 opusername = opuserinfo_query.opusername
-                opcompanyrole = opcompanyinfo_query.companyrole
                 opcompanyexpiredate = opcompanyinfo_query.companyexpiredate
+                if opcompanyexpiredate:
+                    minus = (opcompanyexpiredate - currenttime).total_seconds()
+                    if minus < 0:
+                        opcompanyinfo_query.companyrole = '1'
+                    else:
+                        opcompanyinfo_query.companyrole = '2'
+                    db.session.commit()
+                opcompanyrole = opcompanyinfo_query.companyrole
                 if opcompanyexpiredate:
                     request_create_time_chuo = int(time.mktime(opcompanyexpiredate.timetuple()))
                 else:
@@ -1921,9 +1937,16 @@ def sidebar_get(userid, token):
                 opusercompanyid = opuserinfo_query.opcompanyid
                 opcompanyinfo_query = Company.query.filter_by(companyid=opusercompanyid).first()
                 opcompanyname = opcompanyinfo_query.companyname
-                opcompanyrole = opcompanyinfo_query.companyrole
                 opusername = opuserinfo_query.opusername
                 opcompanyexpiredate = opcompanyinfo_query.companyexpiredate
+                if opcompanyexpiredate:
+                    minus = (opcompanyexpiredate - currenttime).total_seconds()
+                    if minus < 0:
+                        opcompanyinfo_query.companyrole = '1'
+                    else:
+                        opcompanyinfo_query.companyrole = '2'
+                    db.session.commit()
+                opcompanyrole = opcompanyinfo_query.companyrole
                 if opcompanyexpiredate:
                     request_create_time_chuo = int(time.mktime(opcompanyexpiredate.timetuple()))
                 else:
@@ -1961,7 +1984,7 @@ def join_update(request_id,userid, token, request_userid, admin_action, request_
 
         if token != '11111':
             return {'status': 1, 'msg': 'token 不可用'}
-        opjoin_info = Opuser.query.filter_by(opuserid=userid).first()
+        opjoin_info = Opuser.query.filter_by(opuserid=userid,opcompanyid=request_companyid).first()
 
         if opjoin_info.oprole != '4':
             db.session.close()
@@ -1992,6 +2015,7 @@ def join_update(request_id,userid, token, request_userid, admin_action, request_
             request_join_info = Opuser.query.filter_by(opuserid=request_userid, opcompanyid=request_companyid).first()
             if request_join_info:
                 request_join_info.oprole = '3'
+                request_join_info.default = 'true'
             db.session.commit()
             db.session.close()
             return {'status': 0, 'msg': '已经同意', 'request_username': request_username,
@@ -2403,7 +2427,8 @@ def updateopuserdefaultcompany(usertoken, opuserid, opcompanyid):
         if usertoken != '11111':
             return {'status': 1, 'msg': 'Token无效'}
         admin_opuser_query = Opuser.query.filter_by(opuserid=opuserid,opcompanyid=opcompanyid).first()
-        admin_opuser_query.default = 'true'
+        if admin_opuser_query:
+            admin_opuser_query.default = 'true'
         opuser_querys = Opuser.query.filter_by(opuserid=opuserid).all()
         if opuser_querys:
             for opuser in opuser_querys:

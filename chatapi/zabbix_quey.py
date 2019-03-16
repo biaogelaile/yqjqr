@@ -352,9 +352,6 @@ def zabbixallmonitor_add(userid, usertoken, hostinfo_list, companyid):
         zabbixpassword = zabbixinfo_query.zabbixpassword
         zabbixurl = zabbixinfo_query.zabbixserver
         zabbixtoken = auth(zabbixusername, zabbixpassword, zabbixurl)
-        zabbixinfoall_query = Monitor.query.filter_by(companyid=user_companyid).first()
-        if zabbixinfoall_query:
-            zabbixinfoall_query.query.filter_by(companyid=user_companyid).delete()
 
         if hostinfo_list:
             for hostinfo in hostinfo_list:
@@ -480,7 +477,7 @@ def zabbixitem_value_query(userid, usertoken, host, companyid):
         zabbixurl = zabbixinfo_query.zabbixserver
         zabbixtoken = auth(zabbixusername, zabbixpassword, zabbixurl)
         
-        """
+        """        
         #临时存放全部zabbix服务请
         token = userid +'-'+ usertoken
         header = {'Content-Type': 'application/json'}
@@ -491,16 +488,21 @@ def zabbixitem_value_query(userid, usertoken, host, companyid):
         zabbixaddurl = 'http://61.139.64.108:18080/api/v1/zabbixallmonitor'
         payload = {"token":token,"companyid":companyid,"hostinfo":hostlistinfo}
         response2 = requests.post(zabbixaddurl,data= json.dumps(payload),headers=header)
+        db.session.commit()
         if response2.status_code == 200:
             pass
         else:
             return {"status":"5","msg":"失败了"}
-        """
+        """       
+
+
         zabbixinfo_query_hostid = Monitor.query.filter_by(companyid=user_companyid, zabbixhostid=host).first()
         zabbixinfo_query_hostip = Monitor.query.filter_by(companyid=user_companyid, zabbixhostip=host).first()
         zabbixinfo_query_hostname = Monitor.query.filter_by(companyid=user_companyid, zabbixhostname=host).first()
 
         if not zabbixinfo_query_hostid and not zabbixinfo_query_hostip and not zabbixinfo_query_hostname:
+            Monitors = Monitor.query.filter_by(companyid=companyid, save="temp").delete()
+            db.session.commit()
             return {'status':2, 'msg': '没找到主机'}
 
         if zabbixinfo_query_hostid:

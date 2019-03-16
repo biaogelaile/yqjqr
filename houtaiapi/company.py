@@ -659,8 +659,9 @@ def companyhostsinfo(adminuserid, token, page, companyname):
         checkhosts_list = []
         for checkhost_dict in hosts_list:
 
-            checkhostid = checkhost_dict['hostid']
-            checkhost_query = Monitor.query.filter_by(zabbixhostid=checkhostid).first()
+            #checkhostid = checkhost_dict['hostid']
+            checkhost = checkhost_dict['host']
+            checkhost_query = Monitor.query.filter_by(zabbixhostip=checkhost).first()
             if checkhost_query:
                 checkhost_dict['hoststatus'] = 'in'
             else:
@@ -855,7 +856,8 @@ def companydelete(userid, usertoken,companyname):
         companys_query = Opuser.query.filter_by(opuserid=opuser.opuserid).all()
         if len(companys_query) == 1:
             user_query = User.query.filter_by(userid=opuser.opuserid).first()
-            user_query.role = 1
+            if user_query:
+                user_query.role = 1
         db.session.delete(opuser)
     db.session.delete(company_query)
     for tmp in topic_query:
@@ -939,6 +941,11 @@ def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, za
                 db.session.close()
                 return {'status':4, 'msg':"zabbix服务器地址配置不正确"}
             if authrs.status_code == 200:
+                try:
+                    token = authrs.json()["result"]
+                except:
+                    db.session.close()
+                    return {'status': 4, 'msg': "zabbix服务器地址配置不正确"}
                 db.session.commit()
                 return {'status': 0, 'msg': '修改成功'}
             else:
@@ -958,17 +965,25 @@ def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, za
                     },
                     "id": 0
                 })
-
-            authrs = requests.post(zabbixserver + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
-            if authrs.status_code == 200:
-                zabbixserverid = 'z' + generate_random_str()
-                insert_zabbixserver = Zabbix(companyid=companyid, zabbixid=zabbixserverid,
+            try:
+                authrs = requests.post(zabbixserver + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+                if authrs.status_code == 200:
+                    try:
+                        token = authrs.json()["result"]
+                    except:
+                        db.session.close()
+                        return {'status': 4, 'msg': "zabbix服务器地址配置不正确"}
+                    zabbixserverid = 'z' + generate_random_str()
+                    insert_zabbixserver = Zabbix(companyid=companyid, zabbixid=zabbixserverid,
                                              zabbixserver=zabbixserver, zabbixuser=zabbixusername,
                                              zabbixpassword=zabbixpassword)
-                db.session.add(insert_zabbixserver)
-                db.session.commit()
-                return {'status': 0, 'msg': '添加成功'}
-            else:
+                    db.session.add(insert_zabbixserver)
+                    db.session.commit()
+                    return {'status': 0, 'msg': '添加成功'}
+                else:
+                    db.session.close()
+                    return {'status': 4, 'msg': "zabbix服务器地址配置不正确"}
+            except:
                 db.session.close()
                 return {'status': 4, 'msg': "zabbix服务器地址配置不正确"}
 

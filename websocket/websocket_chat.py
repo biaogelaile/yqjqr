@@ -260,6 +260,8 @@ def chatbot_connect(msg):
                     pass
                 else:
                     print("Something worang")
+
+            
         emit('chatbotstatus', msg, room=room)
 
 #推送安卓消息

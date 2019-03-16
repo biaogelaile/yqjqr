@@ -5,4 +5,8 @@ RUN pip3 install  -i https://pypi.douban.com/simple flask_socketio flask request
 ADD . /data
 RUN python3 setup.py sdist
 RUN python3 setup.py install
+
+#设置时区
+#RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone
+
 CMD ["python3", "websocket_chat.py"]

@@ -129,6 +129,7 @@ class Zabbix(db.Model):
     zabbixserver = db.Column(db.String(128), nullable=False, comment='zabbix服务器地址')
     zabbixuser = db.Column(db.String(128), nullable=False, comment='zabbix用户')
     zabbixpassword = db.Column(db.String(128), nullable=False, comment='zabbix密码')
+    official = db.Column(db.String(20), nullable=True, default='1', comment='zabbix服务器类型')
     createtime = db.Column(db.TIMESTAMP(True), nullable=False,comment='创建时间')
     updatetime = db.Column(db.TIMESTAMP(True), nullable=False, comment='更新时间')
 

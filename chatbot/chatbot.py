@@ -92,7 +92,10 @@ def botsendmsgtype3(host):
                    {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
 
         else:
-            lastvalue_str = getinfo.json()['cpu'][0]['lastvalue']
+            if getinfo.json()['cpu']:
+                lastvalue_str = getinfo.json()['cpu'][0]['lastvalue']
+            else:
+                lastvalue_str = 0.0
             lastvalue_float = float(lastvalue_str)
             lastvalue_float2 = round(lastvalue_float, 2)
             hostip = getinfo.json()['hostip']
@@ -134,11 +137,17 @@ def botsendmsgtype4(host):
                    {'msg': "没有查询到相关信息、请检查输入信息是否正确。"}}}
     else:
         total_memory_lastvalue = getinfo.json()['total_memory'][0]['lastvalue']
-        available_memory_lastvalue = getinfo.json()['available_memory'][0]['lastvalue']
+        if getinfo.json()['available_memory']:
+            available_memory_lastvalue = getinfo.json()['available_memory'][0]['lastvalue']
+        else:
+            available_memory_lastvalue = 0.0
         used_memory_lastvalue = total_memory_lastvalue - available_memory_lastvalue
         print(total_memory_lastvalue)
         print(available_memory_lastvalue)
-        ratiolastvalue_float = used_memory_lastvalue / total_memory_lastvalue * 100
+        if total_memory_lastvalue == 0.0:
+            ratiolastvalue_float = 0
+        else:
+            ratiolastvalue_float = used_memory_lastvalue / total_memory_lastvalue * 100
         ratiolastvalue = round(ratiolastvalue_float, 2)
         hostip = getinfo.json()['hostip']
 
@@ -278,7 +287,10 @@ def botsendmsgtype6(host):
 
                     alldiskvalue = lasttotaldiskinfo_check['totalSize']
                     useddiskvalue = lastuseddiskinfo['usedSize']
-                    diskratio = useddiskvalue / alldiskvalue * 100
+                    if alldiskvalue == 0.0:
+                        diskratio = 0
+                    else:
+                        diskratio = useddiskvalue / alldiskvalue * 100
 
                     int_diskratio = int(diskratio)
                     float_alldiskvalue = '%.2f' % alldiskvalue
@@ -319,8 +331,6 @@ def botsendmsgtype1(username):
 def botsendmsgtype11(host ,role, oprole, action, commandType):
     msgid = generate_random_str(32)
     
-    sendmsgtype11 = {'data':"333333333333"}
-    socket.emit('chatbot', sendmsgtype11)
     if role == '8':
         botjoinroot("Oooops, 用户已被禁用Oooops")
 

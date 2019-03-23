@@ -204,9 +204,14 @@ def backstagecm(userid, token, urlsearchcompanyname, page):
 
     for company_query in companys_page_query:
         companyid = company_query.companyid
-        zabbixhostinfo = zabbix_hosts_query(companyid)
-        if zabbixhostinfo['status'] != 2:
-            totalhost = len(zabbixhostinfo['totalhosts'])
+        #zabbixhostinfo = zabbix_hosts_query(companyid)
+        #if zabbixhostinfo['status'] != 2:
+        #    totalhost = len(zabbixhostinfo['totalhosts'])
+        #else:
+        #    totalhost = None
+        zabbixhosts = Monitor.query.filter_by(companyid=companyid).all()
+        if zabbixhosts:
+            totalhost = len(zabbixhosts)
         else:
             totalhost = None
         companyname = company_query.companyname

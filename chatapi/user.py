@@ -140,7 +140,6 @@ def insert_chatbot(companyid):
         return {'status': 3, 'Oooops': '数据库连接出现错误'}
 
 
-"""
 def user_info(userid, token, companyid):
     try:
         if token != '11111':
@@ -185,9 +184,9 @@ def user_info(userid, token, companyid):
     #    return {'status': 2, 'msg': '用户名或密码错误'}
     except sqlalchemy.exc.OperationalError:
         return {'status':3, 'Oooops': '数据库连接出现错误'}
+
+
 """
-
-
 def user_info(userid, token, companyid):
     try:
         if token != '11111':
@@ -227,6 +226,8 @@ def user_info(userid, token, companyid):
                         displaystatus = 1
                     elif minus < 0:
                         pass
+                else:
+                    company_query.companyrole = '1'
             else:
                 user_companyname=None
                 user_companyexpiredate = None
@@ -234,7 +235,11 @@ def user_info(userid, token, companyid):
             if company_query:
                 user_companyrole = company_query.companyrole
                 if minus < 0:
+                    company_query.companyrole = '1'
                     user_companyrole = '1'
+                else:
+                    company_query.companyrole = '2'
+                    user_companyrole = '2'
             else:
                 user_companyrole = '1'
         else:
@@ -257,7 +262,7 @@ def user_info(userid, token, companyid):
     #    return {'status': 2, 'msg': '用户名或密码错误'}
     except sqlalchemy.exc.OperationalError:
         return {'status':3, 'Oooops': '数据库连接出现错误'}
-
+"""
 
 
 
@@ -1078,7 +1083,7 @@ def my_md5(s,salt=''):        #加盐，盐的默认值是空
     return m.hexdigest()      #获取加密后的字符串
 """
 
-
+"""
 def user_login(mobile, password):
     try:
         user_query = User.query.filter_by(mobile=mobile).first()
@@ -1092,10 +1097,6 @@ def user_login(mobile, password):
 
         user_password = user_query.password
         
-        """
-        salt = ""
-        user_password = my_md5(user_password,salt=salt)
-        """
 
         if user_password != password:
             return {'status': 1, 'msg': '用户名或密码错误'}
@@ -1295,6 +1296,232 @@ def user_login(mobile, password):
         # 3 为数据库连接错误
     except sqlalchemy.exc.OperationalError:
         return {'status': 3, 'Oooops': '数据库连接似乎出了问题'}
+"""
+
+def user_login(mobile, password):   
+    try:
+        user_query = User.query.filter_by(mobile=mobile).first()
+
+        if user_query is None:
+            db.session.close()
+            return {'status': 1, 'msg': '用户名或密码错误'}
+        """
+        user_mark = user_query.mark
+        if user_mark == "userdisabled":
+            return {'status': 10, 'msg': '用户已被禁用'}
+        """
+        user_password = user_query.password
+        
+        """
+        salt = ""
+        user_password = my_md5(user_password,salt=salt)
+        """
+
+        if user_password != password:
+            return {'status': 1, 'msg': '用户名或密码错误'}
+
+        user_id = user_query.userid
+        user_role = user_query.role
+        user_name = user_query.username
+        user_profile = user_query.profile
+        # 当用户申请加入公司但是处于审核状态
+        if user_query.role == '2':
+            user_mark = user_query.mark
+            if user_mark == "userdisabled":
+                return {'status':10,'msg':"用户已被禁用"}
+            user_youke_company_query = Opuser.query.filter_by(opuserid=user_id).first()
+            youkecompanyid = user_youke_company_query.opcompanyid
+            youkecompanyinfo = Company.query.filter_by(companyid=youkecompanyid).first()
+            youke_companyexpiredate = youkecompanyinfo.companyexpiredate
+            if youke_companyexpiredate:
+                request_create_time_chuo = int(time.mktime(youke_companyexpiredate.timetuple()))
+            else:
+                request_create_time_chuo = None
+
+            youke_companyname = youkecompanyinfo.companyname
+            youke_companrole = youkecompanyinfo.companyrole
+            db.session.close()
+            return {
+                "companyexpiredate": request_create_time_chuo,
+                "companyid": youkecompanyid,
+                "companyname": youke_companyname,
+                "companyrole": youke_companrole,
+                "email": None,
+                "imageUrl": user_profile,
+                "mobile": mobile,
+                "msg": "登录成功",
+                "role": user_role,
+                "status": 0,
+                "token": user_id + "-11111",
+                "userid": user_id,
+                "username": user_name,
+            }
+
+        opuser_company_default_querys = Opuser.query.filter_by(opmobile=mobile).first()
+        # 当用户未加入公司
+        if opuser_company_default_querys is None:
+            user_mark = user_query.mark
+            if user_mark == "userdisabled":
+                return {'status': 10, 'msg': "用户已被禁用"}
+            logintime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            user_query.logintime = logintime
+            db.session.commit()
+            db.session.close()
+            return {
+                "companyexpiredate": None,
+                "companyid": None,
+                "companyname": None,
+                "companyrole": None,
+                "email": None,
+                "imageUrl": user_profile,
+                "mobile": mobile,
+                "msg": "登录成功",
+                "role": user_role,
+                "status": 0,
+                "token": user_id + "-11111",
+                "userid": user_id,
+                "username": user_name,
+            }
+
+        companycount = 0
+        opuserlist = []
+        opusers_query = Opuser.query.filter_by(opmobile=mobile,company_user_status="3").all()
+        for opuser in opusers_query:
+            opcompanyid = opuser.opcompanyid
+            opcompanyinfo_query = Company.query.filter_by(companyid=opcompanyid,disable=0).first()
+            if opcompanyinfo_query:
+                companycount += 1
+                opuserlist.append(opuser)
+        if companycount >= 2:
+            opcompany_list = []
+            checkopcompany = []
+            for opuser_company_query in opuserlist:
+                if opuser_company_query.oprole != '2':
+                    opcompany_dict = {}
+                    opcompanyid = opuser_company_query.opcompanyid
+                    opuserid = opuser_company_query.opuserid
+                    opusername = opuser_company_query.opusername
+                    opmobile = opuser_company_query.opmobile
+                    oprole = opuser_company_query.oprole
+                    opcompanyinfo_query = Company.query.filter_by(companyid=opcompanyid).first()
+                    opcompanyname = opcompanyinfo_query.companyname
+                    opcompanyrole = opcompanyinfo_query.companyrole
+                    companyexpiredate = opcompanyinfo_query.companyexpiredate
+                    if companyexpiredate:
+                        request_create_time_chuo = int(time.mktime(companyexpiredate.timetuple()))
+                    else:
+                        request_create_time_chuo = None
+                    opcompany_dict['companyid'] = opcompanyid
+                    opcompany_dict['userid'] = opuserid
+                    opcompany_dict['username'] = opusername
+                    opcompany_dict['companyname'] = opcompanyname
+                    opcompany_dict['companyrole'] = opcompanyrole
+                    opcompany_dict['companyexpiredate'] = request_create_time_chuo
+                    opcompany_dict['mobile'] = opmobile
+                    opcompany_dict['oprole'] = oprole
+                    opcompany_list.append(opcompany_dict)
+                else:
+                    checkopcompany.append('check')
+            if len(opuserlist) == len(checkopcompany):
+                db.session.close()
+                return {
+                    "companyexpiredate": None,
+                    "companyid": None,
+                    "companyname": None,
+                    "companyrole": None,
+                    "email": None,
+                    "imageUrl": user_profile,
+                    "mobile": mobile,
+                    "msg": "登录成功",
+                    "role": user_role,
+                    "status": 0,
+                    "token": user_id + "-11111",
+                    "userid": user_id,
+                    "username": user_name,
+                }
+            else:
+                db.session.close()
+                return {'status': 0, 'msg': '登录成功', 'choice': {'status': 'false', 'companyinfo': opcompany_list},
+                        'token': user_id + '-11111'}
+        elif companycount == 1:
+            opuser_company_default_querys = opuserlist[0]
+            opusercompanyid_default = opuser_company_default_querys.opcompanyid
+            opusersdefault = Opuser.query.filter_by(opmobile=mobile).all()
+            for opuserdefault in opusersdefault:
+                if opuserdefault.opcompanyid == opusercompanyid_default:
+                    opuserdefault.default = "true"
+                    db.session.commit()
+                else:
+                    opuserdefault.default = "false"
+                    db.session.commit()
+            opuseremail_default = opuser_company_default_querys.opemail
+            opusercompanyinfo_default = Company.query.filter_by(companyid=opusercompanyid_default).first()
+            opusercompanyname_default = opusercompanyinfo_default.companyname
+            opusercompanyrole_default = opusercompanyinfo_default.companyrole
+            opusercompanyexpire_default = opusercompanyinfo_default.companyexpiredate
+
+            if opusercompanyexpire_default:
+                request_create_time_chuo = int(time.mktime(opusercompanyexpire_default.timetuple()))
+            else:
+                request_create_time_chuo = None
+            myloginopmobile = opuser_company_default_querys.opmobile
+            myloginoprole = opuser_company_default_querys.oprole
+            myloginopusername = opuser_company_default_querys.opusername
+            db.session.close()
+            return {
+                "companyexpiredate": request_create_time_chuo,
+                "companyid": opusercompanyid_default,
+                "companyname": opusercompanyname_default,
+                "companyrole": opusercompanyrole_default,
+                "email": opuseremail_default,
+                "imageUrl": user_profile,
+                "opmobile": myloginopmobile,
+                "mobile": mobile,
+                "msg": "登录成功",
+                "role": user_role,
+                "oprole": myloginoprole,
+                "status": 0,
+                "token": user_id + "-11111",
+                "userid": user_id,
+                "username": user_name,
+                "opusername": myloginopusername,
+
+            }
+        else:
+
+
+            # 当用户只加入一家公司且被禁用
+
+            logintime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            user_query.logintime = logintime
+            oneopuser = Opuser.query.filter_by(opuserid=user_query.userid).first()
+            user_query.role = "1"
+            db.session.commit()
+            db.session.close()
+            return {
+                "companyexpiredate": None,
+                "companyid": None,
+                "companyname": None,
+                "companyrole": None,
+                "email": None,
+                "imageUrl": user_profile,
+                "mobile": mobile,
+                "msg": "登录成功",
+                "role": user_role,
+                "status": 0,
+                "token": user_id + "-11111",
+                "userid": user_id,
+                "username": user_name,
+            }
+            
+        db.session.close()
+        # 0 为 登录成功
+        # 1 为用户名或密码错误
+        # 2 为用户名或密码错误
+        # 3 为数据库连接错误
+    except sqlalchemy.exc.OperationalError:
+        return {'status': 3, 'Oooops': '数据库连接似乎出了问题'}
+
 
 def company_query(companyname, token):
     try:
@@ -1717,6 +1944,12 @@ def getUserCompanyStatus(userid, companyid):
         except sqlalchemy.exc.OperationalError:
             return  {'status': '3', 'msg': '数据库连接出现错误'}
     else:
+        user_query = User.query.filter_by(userid=userid).first()
+        if user_query:
+            if user_query.mark == "userdisabled":
+                return {'status': '0', 'msg': '获取信息成功', 'company_status': '5'}
+            else:
+                return {'status': '0', 'msg': '获取信息成功', 'company_status': '6'}
         return {'status': '1', 'msg': 'companyid不能为空'}
 
 
@@ -1797,6 +2030,7 @@ def sidebar_get(userid, token):
 
         if token != '11111':
             return {'status': 1, 'msg': 'token 不可用'}
+        displaystatus = 1
         #用户为游客返回的数据
         sidebar_get = User.query.filter_by(userid=userid).first()
         user_mark = sidebar_get.mark
@@ -1808,16 +2042,20 @@ def sidebar_get(userid, token):
         #当期时间
         currenttime = datetime(datetime.today().year, datetime.today().month, datetime.today().day,
                                datetime.today().hour, datetime.today().minute, datetime.today().second)
+        #后台设置提醒时间的天数
+        backstage_info = Backstage.query.first()
+        date_inter0 = backstage_info.companyexpire
+        date_inter = float(date_inter0)*3600*24
         if query_role == '1':
             check_action_role_query = Topic.query.filter_by(request_userid=userid, admin_action='1').first()
             if check_action_role_query:
                 rolers = {'status': 0, 'msg': '查询成功', 'username': query_username,
                  'companyname': None, 'companyid': None,
-                 'companyrole': None, 'mobile': query_mobile, 'role': '3'}
+                 'companyrole': None, 'mobile': query_mobile, 'role': '3','displaystatus':1}
             else:
                 rolers = {'status': 0, 'msg': '查询成功','username': query_username,
                     'companyname':None,'companyid':None,
-                    'companyrole': None,'mobile':query_mobile,'role':query_role}
+                    'companyrole': None,'mobile':query_mobile,'role':query_role,'displaystatus':1}
             db.session.close()
             return rolers
         #用户已申请公司返回的数据
@@ -1852,11 +2090,11 @@ def sidebar_get(userid, token):
                 rs = {'status': 0, 'msg': '查询成功','username': query_username,
                     'companyname':opcompanyname,'companyid':opusercompanyid,
                     'companyrole': opcompanyrole,'mobile':query_mobile,
-                    'oprole':query_oprole,'role':action_role}
+                    'oprole':query_oprole,'role':action_role,'displaystatus':1}
             else:
                 rs = {'status': 0, 'msg': '查询成功', 'username': query_username,
                     'companyname': None, 'companyid': None,
-                    'companyrole': None, 'mobile': query_mobile, 'role': '3'}
+                    'companyrole': None, 'mobile': query_mobile, 'role': '3','displaystatus':1}
 
             db.session.close()
             return rs
@@ -1864,7 +2102,7 @@ def sidebar_get(userid, token):
         if query_role == '4':
             return {'status': 0, 'msg': '查询成功', 'username': query_username,
                     'companyname': None, 'companyid': None,
-                    'companyrole': None, 'mobile': query_mobile, 'role': query_role}
+                    'companyrole': None, 'mobile': query_mobile, 'role': query_role,'displaystatus':1}
 
         query_oprole_query = Opuser.query.filter_by(opuserid=userid, default='true').first()
         if query_oprole_query:
@@ -1883,11 +2121,20 @@ def sidebar_get(userid, token):
                 opcompanyexpiredate = opcompanyinfo_query.companyexpiredate
                 if opcompanyexpiredate:
                     minus = (opcompanyexpiredate - currenttime).total_seconds()
-                    if minus < 0:
-                        opcompanyinfo_query.companyrole = '1'
-                    else:
-                        opcompanyinfo_query.companyrole = '2'
+                    if minus > 0 and minus > date_inter:
+                        displaystatus = 0
+                    elif minus > 0 and minus < date_inter:
+                        displaystatus = 1
+                    elif minus < 0:
+                        pass
                     db.session.commit()
+                    opcompanyrole = opcompanyinfo_query.companyrole
+                    if opcompanyrole:
+                        if minus < 0:
+                            opcompanyinfo_query.companyrole = '1'
+                        else:
+                            opcompanyinfo_query.companyrole = '2'
+                        db.session.commit()
                 opcompanyrole = opcompanyinfo_query.companyrole
                 if opcompanyexpiredate:
                     request_create_time_chuo = int(time.mktime(opcompanyexpiredate.timetuple()))
@@ -1896,7 +2143,7 @@ def sidebar_get(userid, token):
                 db.session.close()
                 return {'status': 0, 'msg': '查询成功', 'username': query_username,
                         'companyname': opcompanyname, 'companyid': opusercompanyid,
-                        'companyrole': opcompanyrole, 'mobile': query_mobile,
+                        'companyrole': opcompanyrole, 'mobile': query_mobile,'displaystatus':displaystatus,
                         'oprole':query_oprole,'role': query_role,'companyexpiredate':request_create_time_chuo}
 
         #用户是审核员返回的数据
@@ -1910,11 +2157,21 @@ def sidebar_get(userid, token):
                 opcompanyexpiredate = opcompanyinfo_query.companyexpiredate
                 if opcompanyexpiredate:
                     minus = (opcompanyexpiredate - currenttime).total_seconds()
-                    if minus < 0:
-                        opcompanyinfo_query.companyrole = '1'
-                    else:
-                        opcompanyinfo_query.companyrole = '2'
+                    if minus > 0 and minus > date_inter:
+                        displaystatus = 0
+                    elif minus > 0 and minus < date_inter:
+                        displaystatus = 1
+                    elif minus < 0:
+                        pass
                     db.session.commit()
+                    opcompanyrole = opcompanyinfo_query.companyrole
+                    if opcompanyrole:
+                        if minus < 0:
+                            opcompanyinfo_query.companyrole = '1'
+                        else:
+                            opcompanyinfo_query.companyrole = '2'
+                        db.session.commit()
+
                 opcompanyrole = opcompanyinfo_query.companyrole
                 if opcompanyexpiredate:
                     request_create_time_chuo = int(time.mktime(opcompanyexpiredate.timetuple()))
@@ -1923,7 +2180,7 @@ def sidebar_get(userid, token):
                 db.session.close()
                 return {'status': 0, 'msg': '查询成功', 'username': query_username,
                         'companyname': opcompanyname, 'companyid': opusercompanyid,
-                        'companyrole': opcompanyrole, 'mobile': query_mobile,
+                        'companyrole': opcompanyrole, 'mobile': query_mobile,'displaystatus':displaystatus,
                         'oprole':query_oprole,'role': query_role, 'companyexpiredate':request_create_time_chuo}
             else:
                 db.session.close()
@@ -1941,11 +2198,21 @@ def sidebar_get(userid, token):
                 opcompanyexpiredate = opcompanyinfo_query.companyexpiredate
                 if opcompanyexpiredate:
                     minus = (opcompanyexpiredate - currenttime).total_seconds()
-                    if minus < 0:
-                        opcompanyinfo_query.companyrole = '1'
-                    else:
-                        opcompanyinfo_query.companyrole = '2'
+                    if minus > 0 and minus > date_inter:
+                        displaystatus = 0
+                    elif minus > 0 and minus < date_inter:
+                        displaystatus = 1
+                    elif minus < 0:
+                        pass
                     db.session.commit()
+                    opcompanyrole = opcompanyinfo_query.companyrole
+                    if opcompanyrole:
+                        if minus < 0:
+                            opcompanyinfo_query.companyrole = '1'
+                        else:
+                            opcompanyinfo_query.companyrole = '2'
+                        db.session.commit()
+
                 opcompanyrole = opcompanyinfo_query.companyrole
                 if opcompanyexpiredate:
                     request_create_time_chuo = int(time.mktime(opcompanyexpiredate.timetuple()))
@@ -1967,7 +2234,7 @@ def sidebar_get(userid, token):
                 print(companymember_list)
                 db.session.close()
                 return {'status': 0, 'msg': 'success', 'username':query_username,
-                        'companyname':opcompanyname,'companyid':opusercompanyid,
+                        'companyname':opcompanyname,'companyid':opusercompanyid,'displaystatus':displaystatus,
                         'companyrole': opcompanyrole,'mobile':query_mobile,'role':query_role,
                         'oprole':query_oprole,'companyexpiredate':request_create_time_chuo,
                         'joinlist': admin_user_listlen, 'memberlist': len(companymember_list)}

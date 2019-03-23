@@ -772,23 +772,24 @@ def backstageuserstopped(adminuserid, token, page):
     page_total = math.ceil(users_total)
     for user_query in users_query:
         opuser = Opuser.query.filter_by(opuserid=user_query.userid).first()
-        company = Company.query.filter_by(companyid=opuser.opcompanyid).first()
-        search_user_dict = {}
-        userinfo = {}
-        userinfo['userid'] = user_query.userid
-        userinfo['username'] = user_query.username
-        userinfo['mobile'] = user_query.mobile
-        userinfo['company'] = company.companyname
-        userlogintime = user_query.logintime
-        if userlogintime:
-            userlogintime = int(round(time.mktime(userlogintime.timetuple()) * 1000))
-        userinfo['logintime'] = userlogintime
-        userinfo['role'] = user_query.role
-        userinfo['mark'] = user_query.mark
-        search_user_dict['companyname'] = company.companyname
-        search_user_dict['userallinfo'] = userinfo
+        if opuser:
+            company = Company.query.filter_by(companyid=opuser.opcompanyid).first()
+            search_user_dict = {}
+            userinfo = {}
+            userinfo['userid'] = user_query.userid
+            userinfo['username'] = user_query.username
+            userinfo['mobile'] = user_query.mobile
+            userinfo['company'] = company.companyname
+            userlogintime = user_query.logintime
+            if userlogintime:
+                userlogintime = int(round(time.mktime(userlogintime.timetuple()) * 1000))
+            userinfo['logintime'] = userlogintime
+            userinfo['role'] = user_query.role
+            userinfo['mark'] = user_query.mark
+            search_user_dict['companyname'] = company.companyname
+            search_user_dict['userallinfo'] = userinfo
 
-        search_userinfo_list.append(search_user_dict)
+            search_userinfo_list.append(search_user_dict)
     print(search_userinfo_list)
     db.session.close()
     return {"status": 0, "msg": "查询成功", 'pagetotal':page_total,"userinfo": search_userinfo_list}

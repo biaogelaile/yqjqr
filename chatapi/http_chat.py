@@ -40,6 +40,7 @@ def UserInfoGet():
 @app.route('/api/v1/youke', methods=['GET'])
 def YoukeInfoGet():
     token = request.args.get('token')
+    print(token)
     #token = "youkechatbot-11111"
     usertoken = token.split('-')[1]
     userid = token.split('-')[0]
@@ -381,6 +382,7 @@ def AddZabbixMonitor():
     request_data = request.get_json()
     token = request_data['token']
     hostinfo_list = request_data['hostinfo']
+    print(hostinfo_list)
     companyid = request_data['companyid']
     userid = token.split('-')[0]
     usertoken = token.split('-')[1]
@@ -482,6 +484,16 @@ def Hostinfo():
     userid = token.split('-')[0]
     usertoken = token.split('-')[1]
     joininfors = hostinfo(userid, usertoken, hostip)
+    return jsonify(joininfors)
+
+
+#获取host/hostid/hostname是否存在
+@app.route('/api/v1/hostmessage', methods=['GET'])
+def HostmessageGet():
+
+    host = request.args.get("host")
+    companyid = request.args.get('companyid')
+    joininfors = zabbix_quey.hostmessageget(host, companyid)
     return jsonify(joininfors)
 
 
@@ -685,11 +697,11 @@ def getcomplanyallhostvalue():
         #游客/待审核用户
         result = {"msg": "successful", "result":
             [{"host": "192.168.1.100", "item": [{"available": 89.1668, "key": "cpu", "total": 100.0},
-                                                {"free": 68.7165, "key": "disk", "partition": "/", "total": 100.0},
-                                                {"free": 91.4891, "key": "disk", "partition": "/boot", "total": 100.0},
+                                                {"free": 12.7165, "key": "disk", "partition": "/", "total": 100.0},
+                                                {"free": 31.4891, "key": "disk", "partition": "/boot", "total": 100.0},
                                                 {"available": 20.8195, "key": "memory", "total": 31.4851},
                                                 {"available": 95.9, "key": "network", "total": 100.0}]}], "status": 0}
-   
+        print(result)  
     #result = zabbix_quey.zabbix_get_complay_hosts(usertoken,companyid)
     return jsonify(result)
 

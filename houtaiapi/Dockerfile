@@ -11,7 +11,8 @@ RUN pip3 install  -i https://pypi.douban.com/simple flask_cors
 
 
 #设置时区
-#RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone
+RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' >/etc/timezone
+#RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
  
 ADD . /data
 #CMD ["python3", "http_chat.py"]

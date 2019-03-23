@@ -199,13 +199,14 @@ def query_hosts(userid, usertoken, companyid):
             checkhostid = checkhost_dict['hostid']
             checkhost_query = Monitor.query.filter_by(zabbixhostid=checkhostid,companyid=companyid).first()
             if checkhost_query:
-                checkhost_dict['hoststatus'] = 'in'
-            else:
-                checkhost_dict['hoststatus'] = 'out'
+                if checkhost_query.supervisor == True:
+                    checkhost_dict['hoststatus'] = 'in'
+                else:
+                    checkhost_dict['hoststatus'] = 'out'
             checkhosts_list.append(checkhost_dict)
 
         allhostsnumber = len(checkhosts_list)
-        inhostsnumber_query = Monitor.query.filter_by(companyid=companyid).all()
+        inhostsnumber_query = Monitor.query.filter_by(companyid=companyid,supervisor=True).all()
         inhostsnumber = len(inhostsnumber_query)
         inhostinfo_list = []
         for inhost in inhostsnumber_query:
@@ -274,17 +275,13 @@ def query_zabbixhost(userid, usertoken, searchname, companyid):
     except sqlalchemy.exc.OperationalError:
         return {'status':3, 'Oooops': '数据库连接出现错误'}
 
+"""
 def zabbixmonitor_add(userid, usertoken, hostinfo_list, companyid):
     try:
         if usertoken != '11111':
             return {'status': 1, 'msg': 'token不可用'}
 
         user_youke_check = User.query.filter_by(userid=userid).first()
-        """
-        if user_youke_check.role == '1' or user_youke_check.role == '2':
-            db.session.close()
-            return {'status': 2, 'msg': '游客或者待审核用户无法添加监控主机'}
-        """
         # 生成zabbix token
         user_companyid = companyid
         zabbixinfo_query = Zabbix.query.filter_by(companyid=user_companyid).first()
@@ -333,6 +330,70 @@ def zabbixmonitor_add(userid, usertoken, hostinfo_list, companyid):
         return  {'status':0, 'msg': '添加成功'}
     except sqlalchemy.exc.OperationalError:
         return {'status':3, 'Oooops': '数据库连接出现错误'}
+"""
+
+def zabbixmonitor_add(userid, usertoken, hostinfo_list, companyid):
+    try:
+        if usertoken != '11111':
+            return {'status': 1, 'msg': 'token不可用'}
+
+        user_youke_check = User.query.filter_by(userid=userid).first()
+        """
+        if user_youke_check.role == '1' or user_youke_check.role == '2':
+            db.session.close()
+            return {'status': 2, 'msg': '游客或者待审核用户无法添加监控主机'}
+        """
+        # 生成zabbix token
+        user_companyid = companyid
+        zabbixinfo_query = Zabbix.query.filter_by(companyid=user_companyid).first()
+        zabbixusername = zabbixinfo_query.zabbixuser
+        zabbixpassword = zabbixinfo_query.zabbixpassword
+        zabbixurl = zabbixinfo_query.zabbixserver
+        zabbixtoken = auth(zabbixusername, zabbixpassword, zabbixurl)
+        zabbixinfoall_query = Monitor.query.filter_by(companyid=user_companyid).first()
+        if zabbixinfoall_query:
+            zabbixinfoall_query.query.filter_by(companyid=user_companyid).delete()
+
+        if hostinfo_list:
+            for hostinfo in hostinfo_list:
+                zabbixhostid = hostinfo['hostid']
+                zabbixhostip = hostinfo['host']
+                zabbixhostname = hostinfo['name']
+                supervisor = hostinfo['supervisor']
+
+                data = json.dumps({
+                        "jsonrpc": "2.0",
+                        "method": "item.get",
+                        "params": {
+                            "output": ["itemid", "key_"],
+                            "hostids": zabbixhostid,
+                            },
+                        "auth": zabbixtoken,
+                        "id": 1,
+                        })
+                items_response = requests.post(zabbixurl + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+
+                zabbixitemname_list = ["system.cpu.util[,user]", "vfs.fs.size", "vm.memory.size[available]", "vm.memory.size[total]", "net.if.in", "net.if.out"]
+
+                itemid_list = []
+                for itemid_response_value in items_response.json()['result']:
+                    for zabbixitemname in zabbixitemname_list:
+                        if itemid_response_value['key_'].find(zabbixitemname) != -1:
+                            itemid_list.append(itemid_response_value['itemid'])
+
+                insert_zabbixmonitor = Monitor(companyid=user_companyid, zabbixhostid=zabbixhostid, zabbixhostip=zabbixhostip, zabbixhostname=zabbixhostname, zabbixitemname=str(zabbixitemname_list), zabbixitemid=str(itemid_list),supervisor=supervisor)
+                db.session.add(insert_zabbixmonitor)
+                db.session.commit()
+                db.session.close()
+        else:
+            pass
+        db.session.commit()
+        db.session.close()
+        return  {'status':0, 'msg': '添加成功'}
+    except sqlalchemy.exc.OperationalError:
+        return {'status':3, 'Oooops': '数据库连接出现错误'}
+
+
 
 def zabbixallmonitor_add(userid, usertoken, hostinfo_list, companyid):
     try:
@@ -379,7 +440,7 @@ def zabbixallmonitor_add(userid, usertoken, hostinfo_list, companyid):
                         if itemid_response_value['key_'].find(zabbixitemname) != -1:
                             itemid_list.append(itemid_response_value['itemid'])
 
-                insert_zabbixmonitor = Monitor(companyid=user_companyid, zabbixhostid=zabbixhostid, zabbixhostip=zabbixhostip, save="temp",zabbixhostname=zabbixhostname, zabbixitemname=str(zabbixitemname_list), zabbixitemid=str(itemid_list))
+                insert_zabbixmonitor = Monitor(companyid=user_companyid, zabbixhostid=zabbixhostid, zabbixhostip=zabbixhostip,zabbixhostname=zabbixhostname, zabbixitemname=str(zabbixitemname_list), zabbixitemid=str(itemid_list))
                 db.session.add(insert_zabbixmonitor)
                 db.session.commit()
                 db.session.close()
@@ -462,6 +523,23 @@ def zabbixitem_query(userid, usertoken, companyid):
         return {'status':3, 'Oooops': '数据库连接出现错误'}
 
 
+def hostmessageget( host, companyid):
+    try:
+        if companyid:
+            zabbixinfo_query_hostid = Monitor.query.filter_by(companyid=companyid, zabbixhostid=host).first()
+            zabbixinfo_query_hostip = Monitor.query.filter_by(companyid=companyid, zabbixhostip=host).first()
+            zabbixinfo_query_hostname = Monitor.query.filter_by(companyid=companyid, zabbixhostname=host).first()
+        else:
+            zabbixinfo_query_hostid = Monitor.query.filter_by(zabbixhostid=host).first()
+            zabbixinfo_query_hostip = Monitor.query.filter_by(zabbixhostip=host).first()
+            zabbixinfo_query_hostname = Monitor.query.filter_by(zabbixhostname=host).first()
+
+        if not zabbixinfo_query_hostid and not zabbixinfo_query_hostip and not zabbixinfo_query_hostname:
+
+            return {'status': '2', 'msg': '没找到主机'}
+        return {'status':'0','msg':'主机存在'}
+    except sqlalchemy.exc.OperationalError:
+        return {'status':'3', 'Oooops': '数据库连接出现错误'}
 
 
 def zabbixitem_value_query(userid, usertoken, host, companyid):
@@ -501,8 +579,6 @@ def zabbixitem_value_query(userid, usertoken, host, companyid):
         zabbixinfo_query_hostname = Monitor.query.filter_by(companyid=user_companyid, zabbixhostname=host).first()
 
         if not zabbixinfo_query_hostid and not zabbixinfo_query_hostip and not zabbixinfo_query_hostname:
-            Monitors = Monitor.query.filter_by(companyid=companyid, save="temp").delete()
-            db.session.commit()
             return {'status':2, 'msg': '没找到主机'}
 
         if zabbixinfo_query_hostid:
@@ -580,7 +656,6 @@ def zabbixitem_value_query(userid, usertoken, host, companyid):
         response_queryinfo['cpu'] = cpu_query_list
         response_queryinfo['hostip'] = hostinfo
 
-        Monitors = Monitor.query.filter_by(companyid=companyid,save="temp").delete()
         db.session.commit()
         db.session.close()
         return response_queryinfo
@@ -625,7 +700,7 @@ def zabbix_get_complay_hosts(usertoken, companyid):
 
     #获取所属公司所有的监控信息
     try:
-        zabbixinfo_querys = Monitor.query.filter_by(companyid=user_companyid).all() 
+        zabbixinfo_querys = Monitor.query.filter_by(companyid=user_companyid,supervisor=True).all() 
         print(len(zabbixinfo_querys))
         #获取所属公司的zabbix服务器信息
         zabbixitems_list = []

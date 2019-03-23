@@ -53,6 +53,7 @@ class Opuser(db.Model):
     default = db.Column(db.String(128), nullable=True, comment='是否是默认公司')
     oprole = db.Column(db.String(128), nullable=True, comment='用户状态')
     userstatus = db.Column(db.String(128), nullable=False,server_default='register', comment='用户状态')
+    company_user_status = db.Column(db.String(128), nullable=False,server_default='3', comment='公司用户状态')
     opemail = db.Column(db.String(128), nullable=True, comment='email')
     createtime = db.Column(db.TIMESTAMP(True), nullable=False,comment='创建时间')
     updatetime = db.Column(db.TIMESTAMP(True), nullable=False, comment='更新时间')
@@ -119,6 +120,7 @@ class Zabbix(db.Model):
     zabbixserver = db.Column(db.String(128), nullable=False, comment='zabbix服务器地址')
     zabbixuser = db.Column(db.String(128), nullable=False, comment='zabbix用户')
     zabbixpassword = db.Column(db.String(128), nullable=False, comment='zabbix密码')
+    official = db.Column(db.String(20), nullable=True, default='1', comment='zabbix服务器类型')
     createtime = db.Column(db.TIMESTAMP(True), nullable=False,comment='创建时间')
     updatetime = db.Column(db.TIMESTAMP(True), nullable=False, comment='更新时间')
 
@@ -134,9 +136,9 @@ class Monitor(db.Model):
     zabbixhostname = db.Column(db.String(128), nullable=False, comment='zabbix hostname')
     zabbixitemid = db.Column(db.String(1280), nullable=True, comment='zabbix组id')
     zabbixitemname = db.Column(db.String(128), nullable=True, comment='zabbix组id')
-    save = db.Column(db.String(128), nullable=True, comment='临时存放')
     createtime = db.Column(db.TIMESTAMP(True), nullable=False,comment='创建时间')
     updatetime = db.Column(db.TIMESTAMP(True), nullable=False, comment='更新时间')
+    supervisor = db.Column(db.Boolean, default=1, comment='监控开关')
 
 
 class Backstage(db.Model):

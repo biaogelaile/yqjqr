@@ -129,7 +129,7 @@ def botsendmsgtype6(host):
             "actions": [
                 {
                 "title": "磁盘",
-                "ratio": '0',
+                "ratio": '24.36',
                 }
             ]}}}
 

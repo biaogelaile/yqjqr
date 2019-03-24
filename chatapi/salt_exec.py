@@ -191,7 +191,8 @@ def main(username,  usertoken, clientip, command, companyid, hostname):
             'result': msg,
             'status': status
         }
-        return result
+        #return result
+        return json.dumps(result)
 
 
 def exec_passport(username,  usertoken, clientip, commandid, companyid):

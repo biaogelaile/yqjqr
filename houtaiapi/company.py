@@ -48,7 +48,13 @@ def hostgroups(zabbixtoken, zabbixurl):
     return group_list
 
 def zabbix_hosts_query(companyid):
-        zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid).first()
+        company_query = Company.query.filter_by(companyid=companyid).first()
+        companyrole = company_query.companyrole
+        if companyrole == '1':
+            zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid,official='1').first()
+        elif companyrole == '2':
+            zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid, official='2').first()
+        #zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid).first()
         if zabbixinfo_query is None:
             db.session.close()
             return {'status': 2, 'msg': '使用监控功能之前，需要先添加zabbix服务器'}
@@ -139,7 +145,11 @@ def backstagecms(userid, token, page):
         user_query = Opuser.query.filter(Opuser.opcompanyid==companyid, Opuser.oprole!=2).all()
         totalcompanyusers = int(len(user_query)) - 1
         adminuser_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
-        zabbix_query = Zabbix.query.filter_by(companyid=companyid).first()
+        if companyrole == '1':
+            zabbix_query = Zabbix.query.filter_by(companyid=companyid,official='1').first()
+        elif companyrole == '2':
+            zabbix_query = Zabbix.query.filter_by(companyid=companyid, official='2').first()
+        #zabbix_query = Zabbix.query.filter_by(companyid=companyid).first()
         zabbix_exist = "false"
         if zabbix_query:
             zabbixid = zabbix_query.zabbixid
@@ -221,7 +231,11 @@ def backstagecm(userid, token, urlsearchcompanyname, page):
         user_query = Opuser.query.filter_by(opcompanyid=companyid).all()
         totalcompanyusers = len(user_query)
         adminuser_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
-        zabbix_query = Zabbix.query.filter_by(companyid=companyid).first()
+        if companyrole == '1':
+            zabbix_query = Zabbix.query.filter_by(companyid=companyid,official='1').first()
+        elif companyrole == '2':
+            zabbix_query = Zabbix.query.filter_by(companyid=companyid, official='2').first()
+        #zabbix_query = Zabbix.query.filter_by(companyid=companyid).first()
         zabbix_exist = "false"
         if zabbix_query:
             zabbixid = zabbix_query.zabbixid
@@ -286,7 +300,11 @@ def backstagecm1(userid, token, searchcompanyid, page):
         user_query = Opuser.query.filter_by(opcompanyid=companyid).all()
         totalcompanyusers = len(user_query)
         adminuser_query = Opuser.query.filter_by(opcompanyid=companyid, oprole='4').first()
-        zabbix_query = Zabbix.query.filter_by(companyid=companyid).first()
+        if companyrole == '1':
+            zabbix_query = Zabbix.query.filter_by(companyid=companyid,official='1').first()
+        elif companyrole == '2':
+            zabbix_query = Zabbix.query.filter_by(companyid=companyid, official='2').first()
+        #zabbix_query = Zabbix.query.filter_by(companyid=companyid).first()
         zabbix_exist = "false"
         if zabbix_query:
             zabbixid = zabbix_query.zabbixid
@@ -351,7 +369,11 @@ def backstagetryouts(userid, token, page):
         # totalcompanyusers = len(user_query)
         user_query = Opuser.query.filter(Opuser.opcompanyid==companyid, Opuser.oprole!=2).all()
         totalcompanyusers = int(len(user_query)) - 1
-        zabbix_query = Zabbix.query.filter_by(companyid=companyid).first()
+        if companyrole == '1':
+            zabbix_query = Zabbix.query.filter_by(companyid=companyid,official='1').first()
+        elif companyrole == '2':
+            zabbix_query = Zabbix.query.filter_by(companyid=companyid, official='2').first()
+        #zabbix_query = Zabbix.query.filter_by(companyid=companyid).first()
         zabbix_exist = "false"
         if zabbix_query:
             zabbixid = zabbix_query.zabbixid
@@ -913,6 +935,8 @@ def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, za
         return {'status': 3, 'Oooops': '数据库连接出现错误'}
 """
 
+
+"""
 def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, zabbixusername, zabbixpassword):
     try:
         if usertoken != '11111':
@@ -995,3 +1019,95 @@ def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, za
 
     except sqlalchemy.exc.OperationalError:
         return {'status': 3, 'Oooops': '数据库连接出现错误'}
+"""
+
+
+def zabbixserver_update(userid, usertoken, companyid, zabbixid, zabbixserver, zabbixusername, zabbixpassword):
+    try:
+        if usertoken != '11111':
+            return {'status':1, 'msg': 'token不可用'}
+
+        #adminuserinfo_query =Opuser.query.filter_by(opuserid=userid).first()
+        #adminuserrole = adminuserinfo_query.oprole
+        #if adminuserrole != '4':
+            #return {'status': 2, 'msg': '没有权限'}
+        company_query = Company.query.filter_by(companyid=companyid).first()
+        if company_query.companyrole == '1':
+            zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid,official='1').first()
+        elif company_query.companyrole == '2':
+            zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid,official='2').first()
+
+        #zabbixinfo_query = Zabbix.query.filter_by(companyid=companyid).first()
+
+        if zabbixinfo_query:
+            zabbixinfo_query.zabbixid = zabbixid
+            zabbixinfo_query.zabbixserver = zabbixserver
+            zabbixinfo_query.zabbixusername = zabbixusername
+            zabbixinfo_query.zabbixpassword = zabbixpassword
+
+            data = json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "user.login",
+                    "params": {
+                        "user": zabbixusername,
+                        "password": zabbixpassword
+                    },
+                    "id": 0
+                })
+            try: 
+                authrs = requests.post(zabbixserver + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+            except Exception as e:
+                db.session.close()
+                return {'status':4, 'msg':"zabbix服务器地址配置不正确"}
+            if authrs.status_code == 200:
+                try:
+                    token = authrs.json()["result"]
+                except:
+                    db.session.close()
+                    return {'status': 4, 'msg': "zabbix服务器地址配置不正确"}
+                db.session.commit()
+                return {'status': 0, 'msg': '修改成功'}
+            else:
+                db.session.close()
+                return {'status':4, 'msg':"zabbix服务器地址配置不正确"}
+
+
+
+        else:
+            data = json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "user.login",
+                    "params": {
+                        "user": zabbixusername,
+                        "password": zabbixpassword
+                    },
+                    "id": 0
+                })
+            try:
+                authrs = requests.post(zabbixserver + '/zabbix/api_jsonrpc.php', data=data, headers=headers)
+                if authrs.status_code == 200:
+                    try:
+                        token = authrs.json()["result"]
+                    except:
+                        db.session.close()
+                        return {'status': 4, 'msg': "zabbix服务器地址配置不正确"}
+                    zabbixserverid = 'z' + generate_random_str()
+                    insert_zabbixserver = Zabbix(companyid=companyid, zabbixid=zabbixserverid,
+                                             zabbixserver=zabbixserver, zabbixuser=zabbixusername,
+                                             zabbixpassword=zabbixpassword)
+                    db.session.add(insert_zabbixserver)
+                    db.session.commit()
+                    return {'status': 0, 'msg': '添加成功'}
+                else:
+                    db.session.close()
+                    return {'status': 4, 'msg': "zabbix服务器地址配置不正确"}
+            except:
+                db.session.close()
+                return {'status': 4, 'msg': "zabbix服务器地址配置不正确"}
+
+
+    except sqlalchemy.exc.OperationalError:
+        return {'status': 3, 'Oooops': '数据库连接出现错误'}
+

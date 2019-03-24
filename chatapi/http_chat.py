@@ -770,7 +770,8 @@ def exec_command():
         clientip = request_data['clientip']
         command = request_data['command']
         companyid = request_data['companyid']
-        hostinfo = Monitor.query.filter_by(zabbixhostip=clientip).first()
+        hostinfo = Monitor.query.filter_by(zabbixhostname=clientip).first()
+        clientip = hostinfo.zabbixhostip
         hostname = hostinfo.zabbixhostname
     except:
         result = {

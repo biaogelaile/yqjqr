@@ -59,6 +59,7 @@ def talk_connect(msg):
     if "ids" in msg:
         ids = msg["ids"]
         result = push_msg_to_android(ids[0],'jjjbbbkjjk', 'com.domain.operationrobot', '消息通知', '有人@你', 0,'payload')
+        push_msg_to_android("uqJJFUhTHJC4nYlGut4v1hJCj", 'jjjbbbkjjk', 'com.domain.operationrobot', '消息通知', '有人@你', 0, 'payload')
         push_msg_to_ios(ids[0],'dddasdadad', 'com.domain.operationrobot', '消息通知', '有人@你', 'body')
         print("推送结果：",result)
         print("用户id",ids)

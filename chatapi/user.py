@@ -64,6 +64,19 @@ def generate_random_str(randomlength=16):
     random_str = ''.join(str_list)
     return random_str
 
+#产生token
+def token_generate():
+   
+    token_query = UserToken.query.first()
+    if token_query:
+        token_query.delete()
+    newtoken = generate_random_str(5)
+    insert_token = UserToken(token=newtoken)
+    db.session.add(insert_token)
+    db.session.commit()
+    db.session.close()
+    return newtoken
+
 
 def generate_random_int(randomlength=16):
     str_list = [random.choice(string.digits) for i in range(randomlength)]

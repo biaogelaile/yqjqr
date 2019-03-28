@@ -226,4 +226,11 @@ class CommandCheck(db.Model):
     commandcheckstatus = db.Column(db.Boolean, nullable=True, default=0, comment='命令审核状态')
     exresult = db.Column(db.Boolean, nullable=True, default=0, comment='命令执行结果')
 
+class UserToken(db.Model):
+    #定义表名
+    __tablename__ = 'tbl_usertoken'
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(128), nullable=False, comment='用户token')
+    createtime = db.Column(db.TIMESTAMP(True), nullable=False,comment='创建时间')
+
 db.create_all()

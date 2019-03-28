@@ -163,4 +163,11 @@ class Backstage(db.Model):
     updatetime = db.Column(db.TIMESTAMP(True), nullable=False, comment='更新时间')
 
 
+class UserToken(db.Model):
+    #定义表名
+    __tablename__ = 'tbl_usertoken'
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(128), nullable=False, comment='用户token')
+    createtime = db.Column(db.TIMESTAMP(True), nullable=False,comment='创建时间')
+
 #db.create_all()
